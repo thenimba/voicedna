@@ -45,15 +45,12 @@ const Onboarding = () => {
       currentCategoryIndex: 0,
       currentQuestionInCategory: 0,
       totalQuestionsAnswered: 0,
-      qaPairs: [],
-      currentQuestion: "",
+      qaPairs: [] as any[],
+      currentQuestion: INITIAL_QUESTIONS[CATEGORIES[0].id][0],
       isFollowUp: false,
       followUpCount: 0,
       status: "in_progress" as const,
     };
-    // We'll set the first question from the questions bank
-    const { INITIAL_QUESTIONS, CATEGORIES } = require("@/lib/questions");
-    state.currentQuestion = INITIAL_QUESTIONS[CATEGORIES[0].id][0];
     localStorage.setItem("voicedna-interview", JSON.stringify(state));
     navigate("/interview");
   };
