@@ -13,6 +13,11 @@ export default {
       },
     },
     extend: {
+      fontFamily: {
+        serif: ["Lora", "Georgia", "Times New Roman", "serif"],
+        sans: ["DM Sans", "system-ui", "sans-serif"],
+        mono: ["JetBrains Mono", "Courier New", "monospace"],
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
@@ -57,6 +62,25 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
+        // VoiceDNA tokens
+        "vd-paper": "hsl(var(--vd-paper))",
+        "vd-surface": "hsl(var(--vd-surface))",
+        "vd-border": "hsl(var(--vd-border))",
+        "vd-border-strong": "hsl(var(--vd-border-strong))",
+        "vd-cream": "hsl(var(--vd-cream))",
+        "vd-cream-border": "hsl(var(--vd-cream-border))",
+        "vd-t1": "hsl(var(--vd-t1))",
+        "vd-t2": "hsl(var(--vd-t2))",
+        "vd-t3": "hsl(var(--vd-t3))",
+        "vd-accent": "hsl(var(--vd-accent))",
+        "vd-accent-bg": "hsl(var(--vd-accent-bg))",
+        "vd-accent-text": "hsl(var(--vd-accent-text))",
+        "vd-amber": "hsl(var(--vd-amber))",
+        "vd-amber-bg": "hsl(var(--vd-amber-bg))",
+        "vd-amber-border": "hsl(var(--vd-amber-border))",
+        "vd-amber-btn": "hsl(var(--vd-amber-btn))",
+        "vd-green": "hsl(var(--vd-green))",
+        "vd-green-bg": "hsl(var(--vd-green-bg))",
       },
       borderRadius: {
         lg: "var(--radius)",
@@ -65,25 +89,22 @@ export default {
       },
       keyframes: {
         "accordion-down": {
-          from: {
-            height: "0",
-          },
-          to: {
-            height: "var(--radix-accordion-content-height)",
-          },
+          from: { height: "0" },
+          to: { height: "var(--radix-accordion-content-height)" },
         },
         "accordion-up": {
-          from: {
-            height: "var(--radix-accordion-content-height)",
-          },
-          to: {
-            height: "0",
-          },
+          from: { height: "var(--radix-accordion-content-height)" },
+          to: { height: "0" },
+        },
+        "fade-in": {
+          from: { opacity: "0" },
+          to: { opacity: "1" },
         },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+        "fade-in": "fade-in 200ms ease",
       },
     },
   },
