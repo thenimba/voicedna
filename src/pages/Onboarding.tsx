@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowRight, Zap, Settings, Filter } from "lucide-react";
 import type { InterviewMode } from "@/lib/interview-store";
+import { CATEGORIES, INITIAL_QUESTIONS } from "@/lib/questions";
 
 const modes: { id: InterviewMode; icon: React.ReactNode; title: string; time: string; type: string; desc: string; recommended?: boolean }[] = [
   {
