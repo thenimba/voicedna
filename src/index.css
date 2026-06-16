@@ -1,4 +1,32 @@
-@import url('https://fonts.googleapis.com/css2?family=Lora:wght@400;500;600&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Lora:wght@400;500;600&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Noto+Sans+Hebrew:wght@400;500;600;700&display=swap');
+
+/* Hebrew typography: replace serif + sans with Noto Sans Hebrew only when lang is HE */
+html[lang="he"],
+html[lang="he"] body,
+html[lang="he"] button,
+html[lang="he"] input,
+html[lang="he"] textarea,
+html[lang="he"] select {
+  font-family: 'Noto Sans Hebrew', system-ui, -apple-system, sans-serif;
+}
+html[lang="he"] .font-serif,
+html[lang="he"] h1,
+html[lang="he"] h2,
+html[lang="he"] h3,
+html[lang="he"] h4 {
+  font-family: 'Noto Sans Hebrew', system-ui, sans-serif;
+  font-weight: 600;
+  font-style: normal;
+}
+html[lang="he"] em,
+html[lang="he"] i {
+  font-style: normal;
+  font-weight: 500;
+}
+/* Keep mono labels mono — JetBrains Mono falls back gracefully for Hebrew chars */
+html[lang="he"] .font-mono {
+  font-family: 'JetBrains Mono', 'Noto Sans Hebrew', monospace;
+}
 
 @tailwind base;
 @tailwind components;
