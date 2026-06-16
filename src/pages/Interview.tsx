@@ -14,6 +14,13 @@ import { QuestionBubble } from "@/components/interview/QuestionBubble";
 import { UserAnswerBubble } from "@/components/interview/UserAnswerBubble";
 import { InputArea } from "@/components/interview/InputArea";
 import { PageFrame } from "@/components/layout/PageFrame";
+import { SyncIndicator } from "@/components/interview/SyncIndicator";
+import {
+  schedulePush,
+  scheduleDraftPush,
+  pullSession,
+} from "@/lib/interview-sync";
+import { ensureAnonymousUser } from "@/lib/auth";
 
 const FOLLOW_UPS = [
   "That feels a bit like a canned response. Let's push further — how exactly does that manifest in your sentence structure?",
