@@ -42,10 +42,37 @@ const Interview = () => {
 
   useEffect(() => {
     saveState(state);
+    schedulePush(state);
   }, [state]);
 
+  // On mount: ensure auth + pull remote (remote wins if newer / has more answers)
   useEffect(() => {
-    if (!answer.trim()) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        await ensureAnonymousUser();
+        const remote = await pullSession();
+        if (cancelled || !remote) return;
+        const local = getInitialState();
+        if (remote.state.totalQuestionsAnswered >= local.totalQuestionsAnswered) {
+          setState(remote.state);
+          if (remote.draft) setAnswer(remote.draft);
+        }
+      } catch (e) {
+        console.warn("[interview] pull failed", e);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!answer.trim()) {
+      setAutoSaved(false);
+      return;
+    }
+    scheduleDraftPush(answer);
     const t = setTimeout(() => setAutoSaved(true), 1500);
     return () => clearTimeout(t);
   }, [answer]);
