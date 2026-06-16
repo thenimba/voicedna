@@ -10,6 +10,13 @@ import { deleteSession } from "@/lib/interview-sync";
 const Completion = () => {
   const navigate = useNavigate();
   const state = getInitialState();
+  const [anon, setAnon] = useState(false);
+  const [profile, setProfile] = useState<Profile | null>(null);
+
+  useEffect(() => {
+    isAnonymous().then(setAnon);
+    getProfile().then(setProfile);
+  }, []);
 
   const handleDownload = () => {
     let md = `# VOICE PROFILE: ${state.userName}\n\n`;
@@ -38,14 +45,15 @@ const Completion = () => {
     URL.revokeObjectURL(url);
   };
 
-  const handleNewSession = () => {
+  const handleNewSession = async () => {
+    await deleteSession();
     resetInterview();
     navigate("/");
   };
 
   const profileSize = new Blob([JSON.stringify(state.qaPairs)]).size;
   const tokenEstimate = Math.round(profileSize / 2.5);
-  const sessionId = `VD-${Math.random().toString(36).slice(2, 6).toUpperCase()}`;
+  const sessionId = profile?.session_code ?? "VD-LOCAL";
 
   return (
     <PageFrame
