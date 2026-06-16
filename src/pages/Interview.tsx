@@ -14,6 +14,7 @@ import { QuestionBubble } from "@/components/interview/QuestionBubble";
 import { UserAnswerBubble } from "@/components/interview/UserAnswerBubble";
 import { InputArea } from "@/components/interview/InputArea";
 import { PageFrame } from "@/components/layout/PageFrame";
+import { ExampleHint } from "@/components/interview/ExampleHint";
 import {
   schedulePush,
   scheduleDraftPush,
@@ -192,6 +193,14 @@ const Interview = () => {
                 question={displayQuestion}
                 isFollowUp={state.isFollowUp}
               />
+              {!state.isFollowUp && (
+                <ExampleHint
+                  key={`${currentCategory.id}:${state.currentQuestionInCategory}`}
+                  question={displayQuestion}
+                  categoryId={currentCategory.id}
+                  questionIndex={state.currentQuestionInCategory}
+                />
+              )}
             </div>
           </div>
 

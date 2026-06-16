@@ -113,6 +113,11 @@ export const en: Dictionary = {
     "iv.sidebar.exit": "← Exit Interview",
     "iv.topbar.session": "SESSION",
     "iv.topbar.anon": "ANONYMOUS",
+    "iv.example.show": "Show example →",
+    "iv.example.hide": "Hide example",
+    "iv.example.loading": "Thinking…",
+    "iv.example.label": "EXAMPLE · FOR INSPIRATION ONLY",
+    "iv.example.error": "Could not load example",
 
     // Sync
     "sync.idle": "Ready",

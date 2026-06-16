@@ -113,6 +113,11 @@ export const he: Dictionary = {
     "iv.sidebar.exit": "→ צא מהראיון",
     "iv.topbar.session": "סשן",
     "iv.topbar.anon": "אנונימי",
+    "iv.example.show": "← הצג דוגמה",
+    "iv.example.hide": "הסתר דוגמה",
+    "iv.example.loading": "חושב…",
+    "iv.example.label": "דוגמה · להשראה בלבד",
+    "iv.example.error": "טעינת הדוגמה נכשלה",
 
     // Sync
     "sync.idle": "מוכן",
