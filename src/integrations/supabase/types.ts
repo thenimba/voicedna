@@ -14,13 +14,97 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      interview_sessions: {
+        Row: {
+          created_at: string
+          current_category_index: number
+          current_question: string
+          current_question_in_category: number
+          draft_answer: string
+          follow_up_count: number
+          id: string
+          is_follow_up: boolean
+          last_synced_at: string
+          mode: string
+          qa_pairs: Json
+          status: string
+          total_questions_answered: number
+          updated_at: string
+          user_id: string
+          user_name: string
+        }
+        Insert: {
+          created_at?: string
+          current_category_index?: number
+          current_question?: string
+          current_question_in_category?: number
+          draft_answer?: string
+          follow_up_count?: number
+          id?: string
+          is_follow_up?: boolean
+          last_synced_at?: string
+          mode?: string
+          qa_pairs?: Json
+          status?: string
+          total_questions_answered?: number
+          updated_at?: string
+          user_id: string
+          user_name?: string
+        }
+        Update: {
+          created_at?: string
+          current_category_index?: number
+          current_question?: string
+          current_question_in_category?: number
+          draft_answer?: string
+          follow_up_count?: number
+          id?: string
+          is_follow_up?: boolean
+          last_synced_at?: string
+          mode?: string
+          qa_pairs?: Json
+          status?: string
+          total_questions_answered?: number
+          updated_at?: string
+          user_id?: string
+          user_name?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          display_name: string | null
+          id: string
+          is_claimed: boolean
+          session_code: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          display_name?: string | null
+          id: string
+          is_claimed?: boolean
+          session_code: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          is_claimed?: boolean
+          session_code?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      generate_session_code: { Args: never; Returns: string }
+      session_code_exists: { Args: { _code: string }; Returns: boolean }
     }
     Enums: {
       [_ in never]: never
