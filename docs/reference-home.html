@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VoiceDNA — The Interview Room</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;500&family=DM+Sans:wght@400;500&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #F7F6F2;
+    --surface: #FFFFFF;
+    --border: #E3E1D9;
+    --border-strong: #C8C5BD;
+    --cream: #F5F3EE;
+    --t1: #18181B;
+    --t2: #52525B;
+    --t3: #A1A1AA;
+    --accent: #1D4ED8;
+    --accent-hover: #1A45C2;
+    --accent-bg: #EFF6FF;
+    --accent-text: #1E40AF;
+    --ink: #3D3A35;
+    --font-serif: 'Lora', Georgia, 'Times New Roman', serif;
+    --font-sans: 'DM Sans', system-ui, -apple-system, sans-serif;
+    --font-mono: 'JetBrains Mono', 'Courier New', monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { -webkit-font-smoothing: antialiased; }
+  body {
+    background: var(--paper);
+    font-family: var(--font-sans);
+    color: var(--t1);
+    min-height: 100vh;
+  }
+
+  /* RTL-ready: built with logical properties so dir="rtl" + Hebrew works later with near-zero changes */
+  .wrap { max-width: 1160px; margin-inline: auto; padding-inline: 40px; }
+
+  /* Top bar */
+  .topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-block: 26px;
+  }
+  .logo { font-size: 18px; font-weight: 500; letter-spacing: -0.02em; }
+  .logo b { color: var(--accent); font-weight: 500; }
+  .room { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.16em; color: var(--t3); }
+
+  /* Hero grid */
+  .hero {
+    display: grid;
+    grid-template-columns: 1.05fr 0.95fr;
+    gap: 40px;
+    align-items: center;
+    min-height: calc(100vh - 200px);
+    padding-block: 20px 40px;
+  }
+
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 0.18em;
+    color: var(--accent-text);
+    margin-bottom: 22px;
+  }
+  h1 {
+    font-family: var(--font-serif);
+    font-size: clamp(40px, 5vw, 62px);
+    line-height: 1.04;
+    letter-spacing: -0.02em;
+    font-weight: 400;
+    margin-bottom: 22px;
+  }
+  .sub {
+    font-size: 17px;
+    line-height: 1.6;
+    color: var(--t2);
+    max-width: 420px;
+    margin-bottom: 32px;
+  }
+
+  .pills { display: flex; align-items: center; gap: 9px; margin-bottom: 36px; flex-wrap: wrap; }
+  .pill {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--t3);
+    background: var(--surface);
+    border: 0.5px solid var(--border);
+    border-radius: 7px;
+    padding: 8px 13px;
+    white-space: nowrap;
+  }
+  .pill.on { color: var(--accent-text); background: var(--accent-bg); border-color: #C7DBF7; }
+  .pill-arrow { color: var(--t3); font-size: 14px; }
+
+  .cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 15px 28px;
+    font-size: 15px;
+    font-weight: 500;
+    font-family: var(--font-sans);
+    cursor: pointer;
+    transition: background 0.15s ease;
+  }
+  .cta:hover { background: var(--accent-hover); }
+  .cta svg { transition: transform 0.15s ease; }
+  .cta:hover svg { transform: translateX(3px); }
+
+  .trust {
+    margin-top: 18px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.04em;
+    color: var(--t3);
+  }
+
+  /* Right column — the interviewer */
+  .stage { position: relative; display: flex; align-items: center; justify-content: center; min-height: 480px; }
+  .figure { width: 100%; max-width: 420px; display: block; }
+
+  .bubble {
+    position: absolute;
+    inset-block-start: 8px;
+    inset-inline-start: -14px;
+    z-index: 3;
+    background: var(--cream);
+    border-inline-start: 2px solid var(--accent);
+    border-radius: 0 12px 12px 0;
+    padding: 15px 18px 16px;
+    max-width: 260px;
+    animation: floatIn 0.7s cubic-bezier(0.16,1,0.3,1) both;
+  }
+  /* RTL flips the bubble corners automatically */
+  [dir="rtl"] .bubble { border-radius: 12px 0 0 12px; }
+  .bubble-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    color: var(--accent-text);
+    margin-bottom: 8px;
+  }
+  .bubble-q {
+    font-family: var(--font-serif);
+    font-size: 17px;
+    line-height: 1.5;
+    color: var(--t1);
+  }
+
+  .wave {
+    position: absolute;
+    inset-block-end: 44px;
+    inset-inline-start: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: flex-end;
+    gap: 3px;
+    height: 28px;
+    z-index: 2;
+  }
+  .bar {
+    width: 3px;
+    border-radius: 2px;
+    background: var(--accent);
+    animation: pulse 1.4s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { transform: scaleY(0.32); opacity: 0.4; }
+    50% { transform: scaleY(1); opacity: 0.9; }
+  }
+  @keyframes floatIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Responsive */
+  @media (max-width: 880px) {
+    .wrap { padding-inline: 24px; }
+    .hero { grid-template-columns: 1fr; gap: 8px; min-height: auto; padding-block: 16px 48px; }
+    .stage { order: -1; min-height: 380px; margin-bottom: 8px; }
+    .figure { max-width: 320px; }
+    .sub { max-width: none; }
+    h1 { font-size: clamp(38px, 11vw, 52px); }
+  }
+  @media (max-width: 480px) {
+    .room { display: none; }
+    .pills { gap: 7px; }
+    .pill { font-size: 11px; padding: 7px 10px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="topbar">
+    <div class="logo">Voice<b>DNA</b></div>
+    <div class="room">THE INTERVIEW ROOM</div>
+  </header>
+
+  <main class="hero">
+    <!-- LEFT: message + CTA -->
+    <section class="copy">
+      <div class="eyebrow">VOICE PROFILE GENERATOR</div>
+      <h1>Teach AI to<br>think like you.</h1>
+      <p class="sub">Sit down for one honest interview. Walk away with a file that makes any AI write in your voice &mdash; forever.</p>
+
+      <div class="pills">
+        <span class="pill">100 questions</span>
+        <span class="pill-arrow">&rarr;</span>
+        <span class="pill on">your .md file</span>
+        <span class="pill-arrow">&rarr;</span>
+        <span class="pill">AI becomes you</span>
+      </div>
+
+      <button class="cta">
+        Start your interview
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M2 8h11M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <div class="trust">Private by design &middot; 60&ndash;90 min &middot; pause anytime</div>
+    </section>
+
+    <!-- RIGHT: the interviewer -->
+    <section class="stage">
+      <div class="bubble">
+        <div class="bubble-label">QUESTION 01 / 100</div>
+        <div class="bubble-q">What do you believe about your work that almost no one else does?</div>
+      </div>
+
+      <svg class="figure" viewBox="0 0 440 460" xmlns="http://www.w3.org/2000/svg" aria-label="The interviewer">
+        <!-- spotlight -->
+        <circle cx="220" cy="244" r="176" fill="#EFEBE3"/>
+        <circle cx="220" cy="244" r="176" fill="none" stroke="#E3DED4" stroke-width="1"/>
+
+        <!-- torso -->
+        <path d="M150,312 C150,236 198,224 220,224 C242,224 290,236 290,312 Z" fill="#FFFFFF" stroke="#3D3A35" stroke-width="2.5" stroke-linejoin="round"/>
+        <path d="M206,224 L220,246 L234,224" fill="none" stroke="#3D3A35" stroke-width="2" stroke-linejoin="round"/>
+
+        <!-- head -->
+        <circle cx="220" cy="162" r="48" fill="#FFFFFF" stroke="#3D3A35" stroke-width="2.5"/>
+        <path d="M180,150 C188,118 252,118 260,150" fill="none" stroke="#3D3A35" stroke-width="2.5" stroke-linecap="round"/>
+        <!-- eyes looking down at notepad (calm, attentive) -->
+        <path d="M203,166 q6,5 12,0" fill="none" stroke="#3D3A35" stroke-width="2" stroke-linecap="round"/>
+        <path d="M225,166 q6,5 12,0" fill="none" stroke="#3D3A35" stroke-width="2" stroke-linecap="round"/>
+        <path d="M214,188 q6,3 12,0" fill="none" stroke="#3D3A35" stroke-width="2" stroke-linecap="round"/>
+        <!-- neck -->
+        <path d="M205,208 l0,15" stroke="#3D3A35" stroke-width="2.5" stroke-linecap="round"/>
+        <path d="M235,208 l0,15" stroke="#3D3A35" stroke-width="2.5" stroke-linecap="round"/>
+
+        <!-- clipboard -->
+        <g transform="rotate(-6 220 332)">
+          <rect x="158" y="290" width="124" height="86" rx="7" fill="#FFFFFF" stroke="#3D3A35" stroke-width="2.5"/>
+          <rect x="203" y="284" width="34" height="11" rx="3.5" fill="#F5F3EE" stroke="#3D3A35" stroke-width="2"/>
+          <line x1="176" y1="320" x2="252" y2="320" stroke="#1D4ED8" stroke-width="3" stroke-linecap="round"/>
+          <line x1="176" y1="338" x2="264" y2="338" stroke="#3D3A35" stroke-width="1.5" stroke-linecap="round" opacity="0.45"/>
+          <line x1="176" y1="354" x2="238" y2="354" stroke="#3D3A35" stroke-width="1.5" stroke-linecap="round" opacity="0.45"/>
+        </g>
+
+        <!-- arms + pen -->
+        <path d="M158,252 C148,284 156,306 178,318" fill="none" stroke="#3D3A35" stroke-width="2.5" stroke-linecap="round"/>
+        <path d="M282,252 C292,282 282,304 260,312" fill="none" stroke="#3D3A35" stroke-width="2.5" stroke-linecap="round"/>
+        <line x1="256" y1="312" x2="294" y2="288" stroke="#3D3A35" stroke-width="3.5" stroke-linecap="round"/>
+        <circle cx="296" cy="287" r="4.5" fill="#1D4ED8"/>
+      </svg>
+
+      <div class="wave" id="wave"></div>
+    </section>
+  </main>
+
+</div>
+
+<script>
+  const wave = document.getElementById('wave');
+  const heights = [10,16,22,12,24,18,8,20,14,24,12,18,10,22,16,9];
+  heights.forEach((h, i) => {
+    const bar = document.createElement('div');
+    bar.className = 'bar';
+    bar.style.height = h + 'px';
+    bar.style.animationDelay = (i * 0.08) + 's';
+    wave.appendChild(bar);
+  });
+</script>
+</body>
+</html>
