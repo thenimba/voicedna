@@ -1,6 +1,9 @@
-import { useNavigate } from "react-router-dom";
-import { ArrowRight } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useNavigate, Link } from "react-router-dom";
+import { ArrowRight, LogIn } from "lucide-react";
 import { PageFrame } from "@/components/layout/PageFrame";
+import { getInitialState } from "@/lib/interview-store";
+import { pullSession } from "@/lib/interview-sync";
 
 const STEPS = [
   { n: "01", label: "100 questions", active: false },
@@ -10,6 +13,33 @@ const STEPS = [
 
 const Landing = () => {
   const navigate = useNavigate();
+  const [resume, setResume] = useState<{
+    answered: number;
+    name: string;
+  } | null>(null);
+
+  useEffect(() => {
+    const local = getInitialState();
+    if (local.status === "in_progress" && local.totalQuestionsAnswered > 0) {
+      setResume({
+        answered: local.totalQuestionsAnswered,
+        name: local.userName || "your interview",
+      });
+    }
+    // Also try cloud (e.g. just signed in on a fresh device)
+    pullSession().then((r) => {
+      if (r && r.state.status === "in_progress" && r.state.totalQuestionsAnswered > 0) {
+        setResume((cur) =>
+          cur && cur.answered >= r.state.totalQuestionsAnswered
+            ? cur
+            : {
+                answered: r.state.totalQuestionsAnswered,
+                name: r.state.userName || "your interview",
+              },
+        );
+      }
+    });
+  }, []);
 
   return (
     <PageFrame
