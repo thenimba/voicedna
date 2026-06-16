@@ -10,7 +10,7 @@ interface Props {
   /** Status line on the bottom-left of the frame. */
   status?: string;
   /** Mono caption on the bottom-right of the frame. */
-  ref?: string;
+  refLabel?: string;
   /** Hide the outer paper padding (used by Interview, which fills the screen). */
   flush?: boolean;
 }
@@ -25,7 +25,7 @@ export const PageFrame = ({
   protocolTag = "VoiceDNA / Protocol 02",
   roomTag = "The Interview Room",
   status = "Secure Interview Protocol Active",
-  ref: refLabel = "© VoiceDNA Labs",
+  refLabel = "© VoiceDNA Labs",
   flush = false,
 }: Props) => {
   return (
