@@ -31,7 +31,7 @@ function stateToRow(state: InterviewState, userId: string) {
     current_question: state.currentQuestion,
     is_follow_up: state.isFollowUp,
     follow_up_count: state.followUpCount,
-    qa_pairs: state.qaPairs as unknown as object[],
+    qa_pairs: state.qaPairs as unknown as import("@/integrations/supabase/types").Json,
     last_synced_at: new Date().toISOString(),
   };
 }
