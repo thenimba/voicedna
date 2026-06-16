@@ -1,6 +1,6 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { CATEGORIES, INITIAL_QUESTIONS, TOTAL_QUESTIONS } from "@/lib/questions";
+import { CATEGORIES, TOTAL_QUESTIONS } from "@/lib/questions";
 import {
   type InterviewState,
   type QAPair,
@@ -14,22 +14,17 @@ import { QuestionBubble } from "@/components/interview/QuestionBubble";
 import { UserAnswerBubble } from "@/components/interview/UserAnswerBubble";
 import { InputArea } from "@/components/interview/InputArea";
 import { PageFrame } from "@/components/layout/PageFrame";
-import { SyncIndicator } from "@/components/interview/SyncIndicator";
 import {
   schedulePush,
   scheduleDraftPush,
   pullSession,
 } from "@/lib/interview-sync";
 import { ensureAnonymousUser } from "@/lib/auth";
-
-const FOLLOW_UPS = [
-  "That feels a bit like a canned response. Let's push further — how exactly does that manifest in your sentence structure?",
-  "Give me a specific example. When was the last time this showed up in something you wrote?",
-  "I hear you, but that's what everyone says. What makes YOUR approach to this actually different?",
-];
+import { useT } from "@/lib/i18n";
 
 const Interview = () => {
   const navigate = useNavigate();
+  const { t, tQuestion, tFollowUp, tCategory } = useT();
   const [state, setState] = useState<InterviewState>(getInitialState);
   const [answer, setAnswer] = useState("");
   const [autoSaved, setAutoSaved] = useState(false);
@@ -45,7 +40,6 @@ const Interview = () => {
     schedulePush(state);
   }, [state]);
 
-  // On mount: ensure auth + pull remote (remote wins if newer / has more answers)
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -84,13 +78,25 @@ const Interview = () => {
     });
   }, [state.qaPairs.length, state.currentQuestion]);
 
+  const currentCategory = CATEGORIES[state.currentCategoryIndex];
+
+  // Display the question in the active language. For follow-ups, the
+  // text was snapshotted at generation time and stays in that language.
+  const displayQuestion = useMemo(() => {
+    if (state.isFollowUp) return state.currentQuestion;
+    return (
+      tQuestion(currentCategory.id, state.currentQuestionInCategory) ||
+      state.currentQuestion
+    );
+  }, [state, tQuestion, currentCategory.id]);
+
   const handleSubmit = useCallback(() => {
     if (!answer.trim()) return;
 
     const qa: QAPair = {
       questionNumber: state.totalQuestionsAnswered + 1,
-      category: CATEGORIES[state.currentCategoryIndex].id,
-      question: state.currentQuestion,
+      category: currentCategory.id,
+      question: displayQuestion,
       answer: answer.trim(),
       isFollowUp: state.isFollowUp,
     };
@@ -100,7 +106,8 @@ const Interview = () => {
       state.followUpCount < 2 && Math.random() < 0.3 && !state.isFollowUp;
 
     if (shouldFollowUp) {
-      const followUp = FOLLOW_UPS[Math.floor(Math.random() * FOLLOW_UPS.length)];
+      const idx = Math.floor(Math.random() * 3);
+      const followUp = tFollowUp(idx);
       setState({
         ...state,
         qaPairs: newQaPairs,
@@ -114,7 +121,7 @@ const Interview = () => {
 
     setAnswer("");
     setAutoSaved(false);
-  }, [answer, state]);
+  }, [answer, state, displayQuestion, tFollowUp, currentCategory.id]);
 
   const handleSkip = useCallback(() => {
     setState(advanceToNextQuestion(state));
@@ -122,7 +129,6 @@ const Interview = () => {
     setAutoSaved(false);
   }, [state]);
 
-  const currentCategory = CATEGORIES[state.currentCategoryIndex];
   const categoryProgress = CATEGORIES.map((cat) => {
     const answered = state.qaPairs.filter(
       (qa) => qa.category === cat.id && !qa.isFollowUp,
@@ -139,8 +145,8 @@ const Interview = () => {
       protocolTag={`VoiceDNA / Q.${String(
         state.totalQuestionsAnswered + 1,
       ).padStart(3, "0")}`}
-      roomTag={currentCategory.name.toUpperCase()}
-      refLabel={`SESSION · ${state.userName || "ANONYMOUS"}`}
+      roomTag={tCategory(currentCategory.id).toUpperCase()}
+      refLabel={`${t("iv.topbar.session")} · ${state.userName || t("iv.topbar.anon")}`}
     >
       <div className="flex flex-1 min-h-0 overflow-hidden">
         <InterviewSidebar
@@ -175,7 +181,7 @@ const Interview = () => {
               <div className="flex items-center gap-3 my-2">
                 <div className="h-px flex-1 bg-vd-border" />
                 <span className="font-mono-label text-[9px] tracking-[0.18em] text-vd-t3">
-                  Current Question
+                  {t("iv.currentQ")}
                 </span>
                 <div className="h-px flex-1 bg-vd-border" />
               </div>
@@ -183,7 +189,7 @@ const Interview = () => {
 
             <div className="animate-fade-in">
               <QuestionBubble
-                question={state.currentQuestion}
+                question={displayQuestion}
                 isFollowUp={state.isFollowUp}
               />
             </div>
@@ -199,8 +205,8 @@ const Interview = () => {
             wordCount={wordCount}
             placeholder={
               state.isFollowUp
-                ? "Refine your response..."
-                : "Type your response here..."
+                ? t("iv.placeholder.followup")
+                : t("iv.placeholder")
             }
           />
         </div>

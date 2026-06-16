@@ -1,5 +1,6 @@
 import type { Category } from "@/lib/questions";
 import { SyncIndicator } from "./SyncIndicator";
+import { useT } from "@/lib/i18n";
 
 interface Props {
   category: Category;
@@ -14,12 +15,13 @@ export const InterviewTopBar = ({
   totalQuestions,
   isFollowUp,
 }: Props) => {
+  const { t, tCategory } = useT();
   const progress = Math.min((questionNumber / totalQuestions) * 100, 100);
 
   return (
     <div className="border-b border-vd-border bg-vd-surface">
       <div className="flex items-center gap-4 px-6 lg:px-12 h-[48px]">
-        <span className="font-mono-label text-[10px] tracking-[0.16em] text-vd-t3">
+        <span className="font-mono-label text-[10px] tracking-[0.16em] text-vd-t3" dir="ltr">
           Q.{String(questionNumber).padStart(3, "0")}
         </span>
         <span className="w-px h-3 bg-vd-border-strong" />
@@ -30,11 +32,11 @@ export const InterviewTopBar = ({
               : "bg-vd-accent-bg text-vd-accent-text"
           }`}
         >
-          {category.name}
+          {tCategory(category.id)}
         </span>
         {isFollowUp && (
           <span className="font-mono-label text-[10px] tracking-[0.16em] text-vd-amber animate-fade-in">
-            · Follow-up
+            {t("iv.followup")}
           </span>
         )}
 
@@ -42,7 +44,7 @@ export const InterviewTopBar = ({
 
         <SyncIndicator />
         <span className="w-px h-3 bg-vd-border-strong" />
-        <span className="font-mono-data text-[11px] text-vd-t3">
+        <span className="font-mono-data text-[11px] text-vd-t3" dir="ltr">
           {questionNumber} / {totalQuestions}
         </span>
       </div>

@@ -1,33 +1,31 @@
 import { ReactNode } from "react";
 import { Waveform } from "@/components/interview/Waveform";
+import { LangToggle } from "@/components/LangToggle";
+import { useT } from "@/lib/i18n";
 
 interface Props {
   children: ReactNode;
-  /** Mono tag on the top-left, after the mini waveform mark. */
   protocolTag?: string;
-  /** Mono tag on the top-right of the frame. */
   roomTag?: string;
-  /** Status line on the bottom-left of the frame. */
   status?: string;
-  /** Mono caption on the bottom-right of the frame. */
   refLabel?: string;
-  /** Hide the outer paper padding (used by Interview, which fills the screen). */
   flush?: boolean;
 }
 
-/**
- * Galley Proof page chrome: a framed editorial card with a mono marginalia
- * top bar and a status footer. Shared across Landing, Onboarding, Interview,
- * and Completion so every surface reads as a page from the same magazine.
- */
 export const PageFrame = ({
   children,
-  protocolTag = "VoiceDNA / Protocol 02",
-  roomTag = "The Interview Room",
-  status = "Secure Interview Protocol Active",
-  refLabel = "© VoiceDNA Labs",
+  protocolTag,
+  roomTag,
+  status,
+  refLabel,
   flush = false,
 }: Props) => {
+  const { t } = useT();
+  const _protocol = protocolTag ?? t("frame.protocol.default");
+  const _room = roomTag ?? t("frame.room");
+  const _status = status ?? t("frame.status");
+  const _ref = refLabel ?? t("frame.ref.default");
+
   return (
     <div
       className={`min-h-screen w-full bg-vd-paper flex items-stretch justify-center ${
@@ -40,7 +38,7 @@ export const PageFrame = ({
         } bg-vd-surface border border-vd-border flex flex-col relative`}
       >
         {/* Top marginalia bar */}
-        <header className="flex items-center justify-between px-5 md:px-6 py-3.5 border-b border-vd-border">
+        <header className="flex items-center justify-between px-5 md:px-6 py-3.5 border-b border-vd-border gap-3">
           <div className="flex items-center gap-3 min-w-0">
             <Waveform
               barCount={5}
@@ -48,12 +46,15 @@ export const PageFrame = ({
               className="opacity-90 shrink-0"
             />
             <span className="font-mono-label text-[10px] tracking-[0.16em] text-vd-t3 truncate">
-              {protocolTag}
+              {_protocol}
             </span>
           </div>
-          <span className="font-mono-label text-[10px] tracking-[0.16em] text-vd-t1 font-medium uppercase shrink-0 pl-3">
-            {roomTag}
-          </span>
+          <div className="flex items-center gap-3 shrink-0">
+            <span className="font-mono-label text-[10px] tracking-[0.16em] text-vd-t1 font-medium uppercase hidden sm:inline">
+              {_room}
+            </span>
+            <LangToggle />
+          </div>
         </header>
 
         {/* Body */}
@@ -67,11 +68,11 @@ export const PageFrame = ({
               <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-vd-green" />
             </span>
             <span className="font-mono-label text-[10px] tracking-[0.12em] text-vd-t2 uppercase truncate">
-              {status}
+              {_status}
             </span>
           </div>
           <span className="font-mono-label text-[10px] tracking-[0.12em] text-vd-t3 uppercase shrink-0 pl-3 hidden sm:inline">
-            {refLabel}
+            {_ref}
           </span>
         </footer>
       </div>

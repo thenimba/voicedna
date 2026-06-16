@@ -6,9 +6,11 @@ import { Waveform } from "@/components/interview/Waveform";
 import { PageFrame } from "@/components/layout/PageFrame";
 import { isAnonymous, getProfile, type Profile } from "@/lib/auth";
 import { deleteSession } from "@/lib/interview-sync";
+import { useT } from "@/lib/i18n";
 
 const Completion = () => {
   const navigate = useNavigate();
+  const { t, tCategory } = useT();
   const state = getInitialState();
   const [anon, setAnon] = useState(false);
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -24,9 +26,7 @@ const Completion = () => {
 
     const categories = [...new Set(state.qaPairs.map((qa) => qa.category))];
     categories.forEach((cat) => {
-      md += `## ${cat
-        .replace(/-/g, " ")
-        .replace(/\b\w/g, (c) => c.toUpperCase())}\n\n`;
+      md += `## ${tCategory(cat)}\n\n`;
       const catQAs = state.qaPairs.filter((qa) => qa.category === cat);
       catQAs.forEach((qa) => {
         md += `### Q: ${qa.question}\n${qa.answer}\n\n`;
@@ -57,27 +57,25 @@ const Completion = () => {
 
   return (
     <PageFrame
-      protocolTag="VoiceDNA / Issue Pressed"
-      roomTag="The Interview Room"
-      refLabel={`SESSION · ${sessionId}`}
+      protocolTag={t("comp.protocol")}
+      refLabel={`${t("comp.ref")} · ${sessionId}`}
     >
       <div className="grid grid-cols-1 lg:grid-cols-12 flex-1">
-        {/* Left: artifact column */}
         <section className="lg:col-span-7 p-8 md:p-14 lg:p-20 flex flex-col justify-center border-b lg:border-b-0 lg:border-r border-vd-border">
           <span className="font-mono-label text-[11px] tracking-[0.18em] text-vd-accent-text block mb-6">
-            Analysis Complete
+            {t("comp.eyebrow")}
           </span>
 
           <h1 className="font-serif-question text-[clamp(2rem,5vw,3.5rem)] leading-[1.05] text-vd-t1 mb-6">
-            Your <span className="italic">VoiceDNA</span>
+            {t("comp.title.your")}{" "}
+            <span className="italic">{t("comp.title.italic")}</span>
             <br />
-            is on the press.
+            {t("comp.title.tail")}
           </h1>
 
           <p className="text-[16px] text-vd-t2 leading-relaxed max-w-md mb-10">
-            {state.userName ? `${state.userName}, ` : ""}your voice has been
-            captured as a portable markdown file. Upload it to any AI to
-            preserve your style.
+            {state.userName ? `${state.userName}, ` : ""}
+            {t("comp.body")}
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 sm:items-center">
@@ -85,7 +83,7 @@ const Completion = () => {
               onClick={handleDownload}
               className="group inline-flex items-center gap-3 bg-vd-accent text-primary-foreground px-7 py-3.5 text-[13px] font-medium hover:bg-vd-accent-text active:translate-y-px transition-all"
             >
-              Download .md Profile
+              {t("comp.download")}
               <Download className="w-4 h-4 transition-transform group-hover:translate-y-0.5" />
             </button>
             <button
@@ -93,7 +91,7 @@ const Completion = () => {
               className="inline-flex items-center gap-2 px-4 py-2 text-[12px] text-vd-t2 hover:text-vd-t1 transition-colors"
             >
               <RotateCw className="w-3.5 h-3.5" />
-              Start new session
+              {t("comp.newSession")}
             </button>
           </div>
 
@@ -106,42 +104,44 @@ const Completion = () => {
                 <Lock className="w-4 h-4 text-vd-amber mt-1 shrink-0" />
                 <div className="flex-1 min-w-0">
                   <p className="font-mono-label text-[10px] tracking-[0.16em] text-vd-amber mb-1">
-                    Anonymous session · device-bound
+                    {t("comp.claim.label")}
                   </p>
                   <p className="font-serif-question text-[16px] text-vd-t1 leading-snug mb-1">
-                    Save this profile to your email.
+                    {t("comp.claim.title")}
                   </p>
                   <p className="text-[12px] text-vd-t2">
-                    Right now it only exists on this browser. Add an email + password to restore it anywhere.
+                    {t("comp.claim.body")}
                   </p>
                 </div>
-                <ArrowRight className="w-4 h-4 text-vd-amber mt-1 shrink-0 transition-transform group-hover:translate-x-0.5" />
+                <ArrowRight className="w-4 h-4 text-vd-amber mt-1 shrink-0 transition-transform group-hover:translate-x-0.5 rtl:rotate-180" />
               </div>
             </Link>
           ) : profile && profile.is_claimed ? (
             <div className="mt-10 border border-vd-green bg-vd-green-bg p-4 flex items-center gap-3">
               <Mail className="w-4 h-4 text-vd-green shrink-0" />
               <p className="font-mono-label text-[10px] tracking-[0.16em] text-vd-green">
-                Saved to your account — restorable on any device.
+                {t("comp.claimed")}
               </p>
             </div>
           ) : null}
 
           <div className="mt-12 pt-6 border-t border-vd-border">
             <p className="font-mono-label text-[10px] tracking-[0.16em] text-vd-t3 mb-3">
-              How to use this file
+              {t("comp.howto")}
             </p>
-            <pre className="font-mono-data text-[12px] text-vd-t2 bg-vd-cream border border-vd-border p-4 whitespace-pre-wrap leading-relaxed">
+            <pre
+              className="font-mono-data text-[12px] text-vd-t2 bg-vd-cream border border-vd-border p-4 whitespace-pre-wrap leading-relaxed"
+              dir="ltr"
+            >
               {`> Read ${state.userName || "[your-name]"}.md first.\n> Then [your task].`}
             </pre>
           </div>
         </section>
 
-        {/* Right: cream stats rail */}
         <aside className="lg:col-span-5 bg-vd-cream p-8 md:p-12 flex flex-col justify-between gap-10">
           <div className="space-y-10">
             <p className="font-mono-label text-[10px] tracking-[0.2em] text-vd-t3">
-              _Issue Specs
+              {t("comp.specs")}
             </p>
 
             <Waveform
@@ -153,7 +153,7 @@ const Completion = () => {
             <dl className="space-y-5">
               <div className="flex items-baseline justify-between border-b border-vd-border-strong/40 pb-3">
                 <dt className="font-mono-label text-[10px] text-vd-t3">
-                  Profile Size
+                  {t("comp.size")}
                 </dt>
                 <dd className="font-serif-question text-[20px] text-vd-t1">
                   {(profileSize / 1024).toFixed(1)}{" "}
@@ -162,7 +162,7 @@ const Completion = () => {
               </div>
               <div className="flex items-baseline justify-between border-b border-vd-border-strong/40 pb-3">
                 <dt className="font-mono-label text-[10px] text-vd-t3">
-                  Questions Answered
+                  {t("comp.answered")}
                 </dt>
                 <dd className="font-serif-question text-[20px] text-vd-t1">
                   {state.qaPairs.length}
@@ -170,7 +170,7 @@ const Completion = () => {
               </div>
               <div className="flex items-baseline justify-between border-b border-vd-border-strong/40 pb-3">
                 <dt className="font-mono-label text-[10px] text-vd-t3">
-                  Tokens Captured
+                  {t("comp.tokens")}
                 </dt>
                 <dd className="font-serif-question text-[20px] text-vd-t1">
                   {tokenEstimate.toLocaleString()}
@@ -178,10 +178,10 @@ const Completion = () => {
               </div>
               <div className="flex items-baseline justify-between">
                 <dt className="font-mono-label text-[10px] text-vd-t3">
-                  Refinement
+                  {t("comp.refinement")}
                 </dt>
                 <dd className="font-mono-label text-[11px] text-vd-accent-text">
-                  Expert
+                  {t("comp.expert")}
                 </dd>
               </div>
             </dl>
@@ -189,10 +189,10 @@ const Completion = () => {
 
           <figure className="pt-6 border-t border-vd-border-strong/60">
             <blockquote className="font-serif-question italic text-[14px] leading-relaxed text-vd-t2">
-              "Update this file every 3–4 months as your voice evolves."
+              {t("comp.colophon")}
             </blockquote>
             <figcaption className="font-mono-label text-[9px] text-vd-t3 mt-3 tracking-[0.16em]">
-              — COLOPHON
+              {t("comp.colophon.cap")}
             </figcaption>
           </figure>
         </aside>
