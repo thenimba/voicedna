@@ -1,4 +1,5 @@
 import type { Category } from "@/lib/questions";
+import { SyncIndicator } from "./SyncIndicator";
 
 interface Props {
   category: Category;
