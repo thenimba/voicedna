@@ -40,6 +40,8 @@ export const InterviewTopBar = ({
 
         <div className="flex-1" />
 
+        <SyncIndicator />
+        <span className="w-px h-3 bg-vd-border-strong" />
         <span className="font-mono-data text-[11px] text-vd-t3">
           {questionNumber} / {totalQuestions}
         </span>
