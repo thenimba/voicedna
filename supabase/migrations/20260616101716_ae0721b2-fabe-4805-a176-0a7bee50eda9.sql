@@ -1,0 +1,1 @@
+DROP FUNCTION IF EXISTS public.session_code_exists(TEXT);
