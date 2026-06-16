@@ -1,68 +1,104 @@
 import { useNavigate } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
-import { Waveform } from "@/components/interview/Waveform";
+import { PageFrame } from "@/components/layout/PageFrame";
+
+const STEPS = [
+  { n: "01", label: "100 questions", active: false },
+  { n: "02", label: "Your .md file", active: true },
+  { n: "03", label: "AI becomes you", active: false },
+];
 
 const Landing = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-vd-paper flex flex-col">
-      {/* Nav */}
-      <nav className="flex items-center justify-between px-8 py-5">
-        <div className="flex items-baseline gap-0">
-          <span className="text-lg font-sans font-normal text-vd-t1">Voice</span>
-          <span className="text-lg font-sans font-medium text-vd-accent">DNA</span>
-        </div>
-        <span className="font-mono-label text-[10px] text-vd-t3">
-          The Interview Room
-        </span>
-      </nav>
-
-      {/* Hero */}
-      <main className="flex-1 flex flex-col items-center justify-center px-6 -mt-16">
-        <div className="max-w-xl text-center space-y-8">
-          <p className="font-mono-label text-[11px] text-vd-accent-text tracking-widest">
+    <PageFrame
+      protocolTag="VoiceDNA / Protocol 02"
+      roomTag="The Interview Room"
+      refLabel="REF · VD_LANDING_001"
+    >
+      <div className="grid grid-cols-1 lg:grid-cols-12 flex-1">
+        {/* Left: editorial column (7) */}
+        <section className="lg:col-span-7 p-8 md:p-14 lg:p-20 flex flex-col justify-center border-b lg:border-b-0 lg:border-r border-vd-border">
+          <span className="font-mono-label text-[11px] tracking-[0.18em] text-vd-accent-text block mb-6">
             Voice Profile Generator
-          </p>
+          </span>
 
-          <h1 className="font-serif-question text-[clamp(2rem,5vw,2.75rem)] leading-[1.15] text-vd-t1 text-balance">
-            Teach AI to think like you.
+          <h1 className="font-serif-question text-[clamp(2.5rem,6vw,4.5rem)] leading-[1.05] text-vd-t1 mb-8 tracking-tight">
+            Teach AI to
+            <br />
+            <span className="italic">think like you.</span>
           </h1>
 
-          <p className="text-[15px] text-vd-t2 leading-relaxed max-w-md mx-auto">
-            Answer 100 questions. Download your voice. Upload it to any AI — forever.
+          <p className="text-[17px] md:text-[19px] text-vd-t2 leading-relaxed max-w-md mb-12">
+            Answer 100 questions. Download your voice. Upload it to any AI —
+            forever.
           </p>
 
-          {/* Pyramid visual */}
-          <div className="flex flex-col items-center gap-3 py-6">
-            <div className="flex items-center gap-3 text-[12px] text-vd-t3 font-mono-data">
-              <span className="px-3 py-1.5 border border-vd-border rounded bg-vd-surface">100 questions</span>
-              <ArrowRight className="w-3 h-3 text-vd-t3" />
-              <span className="px-3 py-1.5 border border-vd-accent/30 rounded bg-vd-accent-bg text-vd-accent-text">Your .md file</span>
-              <ArrowRight className="w-3 h-3 text-vd-t3" />
-              <span className="px-3 py-1.5 border border-vd-border rounded bg-vd-surface">AI becomes you</span>
+          <div className="flex flex-col sm:flex-row sm:items-center gap-6">
+            <button
+              onClick={() => navigate("/onboarding")}
+              className="group inline-flex items-center gap-3 bg-vd-accent text-primary-foreground px-7 py-3.5 text-[13px] font-medium transition-all duration-200 hover:bg-vd-accent-text active:translate-y-px"
+            >
+              <span>Start Your Interview</span>
+              <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+            </button>
+
+            <div className="flex items-center gap-3">
+              <span className="w-6 h-px bg-vd-border-strong" />
+              <span className="font-mono-label text-[10px] tracking-[0.16em] text-vd-t3">
+                Est. 60–90 min
+              </span>
             </div>
           </div>
+        </section>
 
-          <Waveform barCount={9} maxHeight={28} className="mx-auto opacity-30" />
+        {/* Right: cream marginalia rail (5) */}
+        <aside className="lg:col-span-5 bg-vd-cream p-8 md:p-12 flex flex-col justify-between gap-10">
+          <div className="space-y-10">
+            <p className="font-mono-label text-[10px] tracking-[0.2em] text-vd-t3">
+              _Process
+            </p>
 
-          <button
-            onClick={() => navigate("/onboarding")}
-            className="inline-flex items-center gap-2 bg-vd-accent text-primary-foreground rounded-md px-7 py-3 text-sm font-medium hover:opacity-90 transition-opacity active:scale-[0.97] transition-transform"
-          >
-            Start Your Interview
-            <ArrowRight className="w-4 h-4" />
-          </button>
-        </div>
-      </main>
+            {STEPS.map((s) => (
+              <div key={s.n} className="space-y-3">
+                <div className="flex items-center gap-4">
+                  <span className="font-mono-label text-[10px] text-vd-t3">
+                    {s.n}
+                  </span>
+                  <div className="h-px flex-1 bg-vd-border-strong/60" />
+                </div>
+                <div
+                  className={`border p-4 flex items-center justify-between text-[13px] ${
+                    s.active
+                      ? "bg-vd-accent-bg border-vd-accent text-vd-accent-text font-medium"
+                      : "bg-vd-surface border-vd-border text-vd-t2"
+                  }`}
+                >
+                  <span>{s.label}</span>
+                  <span
+                    className={`w-2 h-2 rounded-full ${
+                      s.active
+                        ? "bg-vd-accent"
+                        : "border border-vd-border-strong"
+                    }`}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
 
-      {/* Footer */}
-      <footer className="py-6 text-center">
-        <p className="font-mono-data text-[10px] text-vd-t3">
-          Secure Interview Protocol Active
-        </p>
-      </footer>
-    </div>
+          <figure className="pt-6 border-t border-vd-border-strong/60">
+            <blockquote className="font-serif-question italic text-[15px] leading-relaxed text-vd-t2">
+              "Your voice is the only thing that belongs only to you."
+            </blockquote>
+            <figcaption className="font-mono-label text-[9px] text-vd-t3 mt-3 tracking-[0.16em]">
+              — INTERVIEW ROOM, EPIGRAPH
+            </figcaption>
+          </figure>
+        </aside>
+      </div>
+    </PageFrame>
   );
 };
 
