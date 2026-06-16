@@ -1,68 +1,59 @@
-# Add Hebrew (RTL) Support
+## Goal
 
-Add a Hebrew locale alongside English with a top-bar toggle. Hebrew flips the entire app to RTL and translates all UI chrome plus the 100 interview questions, category names, follow-up pushbacks, and onboarding copy.
+Help users who get stuck on a question by letting them reveal a short, AI-generated example answer in the current language (EN or HE). The example is generated on demand, cached per question for the session, and shown beneath the question bubble.
 
-## Scope
+## UX
 
-In:
-- EN / עב toggle pill in the PageFrame top bar (persisted in `localStorage` as `voicedna.lang`)
-- `<html lang>` and `<html dir>` flip live on change
-- All UI chrome strings translated (Landing, Onboarding, Interview chrome, Completion, Auth, SyncIndicator, InputArea, sidebar, marginalia, status footer, buttons, toasts)
-- All 100 interview questions + 7 category names + follow-up pushback lines translated to Hebrew
-- Tailwind RTL-aware spacing/borders on the few asymmetric components (sidebar border, QuestionBubble left rule, InputArea hints)
+- A small mono-label link `Show example` / `הראה דוגמה` appears beneath the current `QuestionBubble` (not on stale/recent ones).
+- Click → inline italic example block fades in beneath the question, prefixed `EXAMPLE` / `דוגמה`. Marked clearly as a sample, not a suggested answer to copy.
+- While loading: link text swaps to `Thinking…` / `חושב…` and is disabled.
+- After it appears: a `Hide` link toggles it away. Once generated, re-toggling is instant (cached).
+- On error (429 credits, 402, network): show one-line amber error under the link, no toast spam.
+- Not shown for follow-up pushback questions (they're already conversational).
+- Examples are session-only (in-memory map keyed by `${categoryId}:${index}:${lang}`); not persisted, not synced.
 
-Out:
-- No language detection from browser (manual toggle only, default English)
-- No translation of stored answers, session codes, or .md export content
-- No translation of `/docs` markdown
-- No AI/runtime translation — all strings are static dictionaries
+## Architecture
 
-## Approach
+1. **Edge function** `supabase/functions/generate-example/index.ts`
+   - Public (no JWT required), CORS enabled.
+   - Body: `{ question: string, category: string, lang: "en" | "he" }`.
+   - Calls Lovable AI Gateway via `@ai-sdk/openai-compatible` with `google/gemini-3-flash-preview` using the shared gateway helper pattern.
+   - System prompt: "You are helping a writer answer a self-reflection interview question about their writing taste. Produce ONE short (40–70 words) first-person example answer in {lang}. It should sound like a thoughtful but informal human, specific not generic, and clearly an example — not a template. No preamble, no quotes, no markdown."
+   - Returns `{ example: string }`. Handles 429/402 by returning `{ error, status }`.
+   - Shared helper: `supabase/functions/_shared/ai-gateway.ts` (the standard `createLovableAiGatewayProvider`).
 
-Lightweight in-house i18n — no extra library — to keep bundle small and match existing minimal stack.
+2. **Client hook** `src/lib/use-example.ts`
+   - `useExample()` returns `{ example, loading, error, show, hide, visible }`.
+   - Keeps a module-level `Map<string, string>` cache.
+   - Calls the edge function via `supabase.functions.invoke("generate-example", { body })`.
 
-1. `src/lib/i18n/types.ts` — `Lang = "en" | "he"`, `Dictionary` shape
-2. `src/lib/i18n/en.ts` and `src/lib/i18n/he.ts` — full string dictionaries:
-   - `ui.*` — every visible label, button, placeholder, status, marginalia
-   - `categories.<id>` — translated category names (ids stay stable in storage)
-   - `questions.<categoryId>[]` — Hebrew translations index-aligned with English
-   - `followUps[]` — translated pushback lines
-3. `src/lib/i18n/index.ts` — `LangProvider` context + `useT()` hook returning `{ t, lang, setLang, dir }`. On mount and on `setLang`, sets `document.documentElement.lang` and `dir`. Persists to `localStorage`.
-4. `src/components/LangToggle.tsx` — small EN / עב pill, mono-label styling, placed in `PageFrame` header next to the room tag.
-5. Wrap `<App />` in `<LangProvider>` in `src/main.tsx`.
-6. Refactor `src/lib/questions.ts`:
-   - Keep `CATEGORIES` ids/counts/icons as the source of truth
-   - Move all English strings into `en.ts`
-   - Add `getQuestion(categoryId, index, lang)` and `getCategoryName(id, lang)` helpers used by the interview store
-   - `INITIAL_QUESTIONS` becomes a per-language lookup
-7. Update `interview-store.ts` selector that picks the current question to read from the active language dictionary (question text in `qaPairs` is captured at submit time in whatever language the user saw — that snapshot stays as-is).
-8. Update each page/component to use `t(...)` for hardcoded strings.
-9. RTL polish:
-   - Add `dir="rtl"` aware utility classes where order matters (`flex-row-reverse` only where the asymmetric editorial layout demands it — Landing 7/5 grid keeps reading order, just text-aligns right)
-   - `QuestionBubble` border-left becomes border-right in RTL (`rtl:border-l-0 rtl:border-r-2 rtl:pl-0 rtl:pr-6`)
-   - `InterviewSidebar` right border becomes left border in RTL
-   - Arrow icons (`ArrowRight`) flip via `rtl:rotate-180` on the icon
+3. **UI** new component `src/components/interview/ExampleHint.tsx`
+   - Mono-label toggle link + italic example block in `bg-vd-cream/40 border-l border-vd-border` styling, mirrored for RTL (matches `QuestionBubble` direction logic).
+   - Receives `question`, `categoryId`, `questionIndex`, `lang`.
 
-## Technical Notes
+4. **Wire into `Interview.tsx`**
+   - Render `<ExampleHint />` directly beneath the current `QuestionBubble` (inside the `animate-fade-in` block), only when `!state.isFollowUp`.
+   - Reset visibility automatically when the question changes (component keyed by `${categoryId}:${index}`).
 
-```
-src/lib/i18n/
-  ├── types.ts        // Lang, Dictionary
-  ├── en.ts           // English dictionary (source of truth, mirrors current copy)
-  ├── he.ts           // Hebrew translations (index-aligned)
-  └── index.ts        // LangProvider, useT(), <html dir/lang> sync
+5. **i18n strings** add to `src/lib/i18n/en.ts` and `he.ts`:
+   - `iv.example.show`, `iv.example.hide`, `iv.example.loading`, `iv.example.label`, `iv.example.error`
 
-src/components/LangToggle.tsx
-```
+## Out of scope
 
-- Storage key: `voicedna.lang` (default `"en"`)
-- Tailwind already supports `rtl:` variants in v3 — no config change needed
-- `qaPairs[].question` keeps whatever language was shown at submit time, so changing language mid-interview doesn't rewrite history
-- Category `id` stays English in DB/localStorage; only the displayed `name` is translated
+- Persisting examples across sessions or syncing to Cloud.
+- Per-question hand-written examples (chose AI-on-demand).
+- Example button on completion screen / pushback follow-ups.
+- Rate-limiting / abuse protection beyond what the gateway already enforces.
 
-## Out of Scope
+## Files
 
-- Hebrew translations of the exported `.md` voice file
-- Translating the `/docs` markdown files
-- Hebrew error messages from Supabase auth (those come from the backend)
-- Date/number formatting (not currently displayed)
+Created:
+- `supabase/functions/generate-example/index.ts`
+- `supabase/functions/_shared/ai-gateway.ts` (if not already present)
+- `src/lib/use-example.ts`
+- `src/components/interview/ExampleHint.tsx`
+
+Edited:
+- `src/pages/Interview.tsx` (mount `ExampleHint` under current question)
+- `src/lib/i18n/en.ts`, `src/lib/i18n/he.ts` (5 new keys)
+- `supabase/config.toml` (register function, `verify_jwt = false`)
