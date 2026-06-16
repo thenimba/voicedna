@@ -1,12 +1,22 @@
-import { useNavigate } from "react-router-dom";
-import { ArrowRight, Download, RotateCw } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { ArrowRight, Download, RotateCw, Lock, Mail } from "lucide-react";
 import { getInitialState, resetInterview } from "@/lib/interview-store";
 import { Waveform } from "@/components/interview/Waveform";
 import { PageFrame } from "@/components/layout/PageFrame";
+import { isAnonymous, getProfile, type Profile } from "@/lib/auth";
+import { deleteSession } from "@/lib/interview-sync";
 
 const Completion = () => {
   const navigate = useNavigate();
   const state = getInitialState();
+  const [anon, setAnon] = useState(false);
+  const [profile, setProfile] = useState<Profile | null>(null);
+
+  useEffect(() => {
+    isAnonymous().then(setAnon);
+    getProfile().then(setProfile);
+  }, []);
 
   const handleDownload = () => {
     let md = `# VOICE PROFILE: ${state.userName}\n\n`;
@@ -35,14 +45,15 @@ const Completion = () => {
     URL.revokeObjectURL(url);
   };
 
-  const handleNewSession = () => {
+  const handleNewSession = async () => {
+    await deleteSession();
     resetInterview();
     navigate("/");
   };
 
   const profileSize = new Blob([JSON.stringify(state.qaPairs)]).size;
   const tokenEstimate = Math.round(profileSize / 2.5);
-  const sessionId = `VD-${Math.random().toString(36).slice(2, 6).toUpperCase()}`;
+  const sessionId = profile?.session_code ?? "VD-LOCAL";
 
   return (
     <PageFrame
@@ -85,6 +96,36 @@ const Completion = () => {
               Start new session
             </button>
           </div>
+
+          {anon ? (
+            <Link
+              to="/auth?claim=1"
+              className="mt-10 block border border-vd-amber-border bg-vd-amber-bg p-5 hover:bg-vd-amber-bg/70 transition-colors group"
+            >
+              <div className="flex items-start gap-4">
+                <Lock className="w-4 h-4 text-vd-amber mt-1 shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="font-mono-label text-[10px] tracking-[0.16em] text-vd-amber mb-1">
+                    Anonymous session · device-bound
+                  </p>
+                  <p className="font-serif-question text-[16px] text-vd-t1 leading-snug mb-1">
+                    Save this profile to your email.
+                  </p>
+                  <p className="text-[12px] text-vd-t2">
+                    Right now it only exists on this browser. Add an email + password to restore it anywhere.
+                  </p>
+                </div>
+                <ArrowRight className="w-4 h-4 text-vd-amber mt-1 shrink-0 transition-transform group-hover:translate-x-0.5" />
+              </div>
+            </Link>
+          ) : profile && profile.is_claimed ? (
+            <div className="mt-10 border border-vd-green bg-vd-green-bg p-4 flex items-center gap-3">
+              <Mail className="w-4 h-4 text-vd-green shrink-0" />
+              <p className="font-mono-label text-[10px] tracking-[0.16em] text-vd-green">
+                Saved to your account — restorable on any device.
+              </p>
+            </div>
+          ) : null}
 
           <div className="mt-12 pt-6 border-t border-vd-border">
             <p className="font-mono-label text-[10px] tracking-[0.16em] text-vd-t3 mb-3">

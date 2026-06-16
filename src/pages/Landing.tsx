@@ -1,6 +1,9 @@
-import { useNavigate } from "react-router-dom";
-import { ArrowRight } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useNavigate, Link } from "react-router-dom";
+import { ArrowRight, LogIn } from "lucide-react";
 import { PageFrame } from "@/components/layout/PageFrame";
+import { getInitialState } from "@/lib/interview-store";
+import { pullSession } from "@/lib/interview-sync";
 
 const STEPS = [
   { n: "01", label: "100 questions", active: false },
@@ -10,6 +13,33 @@ const STEPS = [
 
 const Landing = () => {
   const navigate = useNavigate();
+  const [resume, setResume] = useState<{
+    answered: number;
+    name: string;
+  } | null>(null);
+
+  useEffect(() => {
+    const local = getInitialState();
+    if (local.status === "in_progress" && local.totalQuestionsAnswered > 0) {
+      setResume({
+        answered: local.totalQuestionsAnswered,
+        name: local.userName || "your interview",
+      });
+    }
+    // Also try cloud (e.g. just signed in on a fresh device)
+    pullSession().then((r) => {
+      if (r && r.state.status === "in_progress" && r.state.totalQuestionsAnswered > 0) {
+        setResume((cur) =>
+          cur && cur.answered >= r.state.totalQuestionsAnswered
+            ? cur
+            : {
+                answered: r.state.totalQuestionsAnswered,
+                name: r.state.userName || "your interview",
+              },
+        );
+      }
+    });
+  }, []);
 
   return (
     <PageFrame
@@ -35,12 +65,31 @@ const Landing = () => {
             forever.
           </p>
 
+          {resume && (
+            <div className="mb-6 p-4 border border-vd-accent bg-vd-accent-bg flex items-center justify-between gap-4 max-w-xl">
+              <div className="min-w-0">
+                <p className="font-mono-label text-[10px] tracking-[0.16em] text-vd-accent-text mb-1">
+                  Session in progress
+                </p>
+                <p className="text-[13px] text-vd-t1 truncate">
+                  {resume.answered} answers saved for {resume.name}.
+                </p>
+              </div>
+              <button
+                onClick={() => navigate("/interview")}
+                className="shrink-0 inline-flex items-center gap-2 bg-vd-accent text-primary-foreground px-4 py-2 text-[12px] font-medium hover:bg-vd-accent-text active:translate-y-px transition-all"
+              >
+                Resume <ArrowRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          )}
+
           <div className="flex flex-col sm:flex-row sm:items-center gap-6">
             <button
               onClick={() => navigate("/onboarding")}
               className="group inline-flex items-center gap-3 bg-vd-accent text-primary-foreground px-7 py-3.5 text-[13px] font-medium transition-all duration-200 hover:bg-vd-accent-text active:translate-y-px"
             >
-              <span>Start Your Interview</span>
+              <span>{resume ? "Start fresh interview" : "Start Your Interview"}</span>
               <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
             </button>
 
@@ -50,6 +99,16 @@ const Landing = () => {
                 Est. 60–90 min
               </span>
             </div>
+          </div>
+
+          <div className="mt-8 pt-6 border-t border-vd-border max-w-md">
+            <Link
+              to="/auth"
+              className="inline-flex items-center gap-2 font-mono-label text-[10px] tracking-[0.16em] text-vd-t3 hover:text-vd-t1 transition-colors"
+            >
+              <LogIn className="w-3 h-3" />
+              Have an account? Sign in to restore your session
+            </Link>
           </div>
         </section>
 

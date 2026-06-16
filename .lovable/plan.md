@@ -1,66 +1,64 @@
-# VoiceDNA — Docs Archive + Full-App Redesign Program
+# Cloud Backup for Interview Sessions
 
-## Part 1 — Archive source docs
+Persist interview progress to Lovable Cloud so users can resume on any device. Anonymous by default (no friction to start), with an optional "claim with email" step to lock the session to an account.
 
-Create `docs/` and move the five uploaded reference files in, so the design system and the Taste Interviewer prompt live alongside the code.
+## How it works for the user
 
-```
-docs/
-  taste-interviewer-framework.md      ← compass_artifact_wf-…md
-  taste-interviewer-prompt.md
-  DESIGN.md                           ← voicedna-DESIGN.md
-  lovable-prompt.md                   ← voicedna-lovable-prompt.md
-  reference-home.html                 ← voicedna-home.html
-```
+1. **Start an interview** — on first answer we mint an anonymous Supabase auth session for them. A short **session code** (e.g. `VD-7F3K-Q9XM`) appears in the top bar; they can copy it.
+2. **Switch device / lose tab** — on Landing, an input lets them paste a session code to restore. Or if they've already claimed with email, they can sign in.
+3. **Claim a session** — anytime (and prominently on Completion), a "Save to email" button converts the anonymous user to a permanent account with email + password. Same data, now recoverable by sign-in.
+4. **Returning users** — Landing detects existing session and shows "Resume interview (12/45 answered)" instead of pushing them through onboarding again.
 
-Add a one-page `docs/README.md` index that points to each file and labels them: *spec*, *prompt*, *reference HTML*.
+## Surfaces touched
 
-## Part 2 — Redesign program (full app)
+- **Landing** — add a small "Have a session code? / Sign in" affordance + auto-resume banner when a local session exists.
+- **Onboarding** — on Stage 3 (Briefing complete), create the anonymous auth user and write the initial session row to Cloud.
+- **Interview top bar** — show the session code with a copy button; show sync status ("Synced 2s ago" / "Offline — will sync").
+- **Interview** — every answer write is mirrored to Cloud (debounced). Draft textarea also persisted.
+- **Completion** — prominent "Claim with email" card if still anonymous. After claim, show "Saved to {email}".
+- **New `/restore` route** — paste session code → restore state and resume.
+- **New `/auth` route** — minimal sign-in / sign-up screen (email + password, plus Google sign-in by default per Cloud guidance).
 
-Scope: **Landing, Onboarding (3 steps), Interview screen, Completion**. Locked taste (your picks):
+## Data model (Cloud)
 
-- **Palette**: DESIGN.md tokens verbatim (`--vd-paper #F7F6F2`, `--vd-surface #FFFFFF`, `--vd-t1 #18181B`, `--vd-accent #1D4ED8`, amber/green semantic states).
-- **Typography**: DESIGN.md pairing — Lora (serif questions/headlines) + DM Sans (UI/body) + JetBrains Mono (labels/data).
-- **Layout family**: Magazine — asymmetric grids, mixed typographic scales, editorial pacing.
+Two tables, both keyed to `auth.users(id)`:
 
-These are hard constraints across every direction. Variation lives in composition, density, hierarchy, and motion register only.
+- **`profiles`** — one row per user. Fields: `display_name`, `session_code` (unique, the short shareable code), `is_claimed` (false for anonymous, true after email claim). Auto-created by trigger on signup.
+- **`interview_sessions`** — one row per interview. Fields: `user_id` (FK to auth.users), `user_name`, `mode`, `status`, `current_category_index`, `current_question_in_category`, `total_questions_answered`, `current_question`, `is_follow_up`, `follow_up_count`, `qa_pairs` (jsonb array), `draft_answer` (in-progress textarea), `last_synced_at`. RLS: users see only their own rows.
 
-### Step 1 — Capture current state
-Already captured: full-page screenshot of `/` (the current landing). Onboarding, Interview, and Completion will be captured per-screen before generating directions for each, so directions anchor on real UI rather than imagination.
+GRANTs on both tables: `authenticated` (full CRUD on own rows via RLS), `service_role` (all).
 
-### Step 2 — Generate 3 directions per surface
-For each of the 4 surfaces, call `design--create_directions` with the surface screenshot + the locked tokens/type/layout. Each surface gets 3 rendered HTML directions that differ only along these axes:
+## Auth configuration
 
-| Direction | Sensory metaphor | Energy | Structural move |
-|---|---|---|---|
-| **A — Broadsheet** | Front page of a Sunday paper | Quiet, authoritative | Wide masthead, oversized serif headline, narrow lead column, mono dateline rails |
-| **B — Galley Proof** | Editor's marked-up manuscript | Working, intimate | Off-grid pull quotes, marginalia in mono, hairline rules, ink-corrected accents |
-| **C — Issue №** | Indie print magazine | Confident, graphic | Numbered section chrome, oversized category numerals, asymmetric two-column with bleed cards |
+- Enable **anonymous sign-ins** (`external_anonymous_users_enabled: true`) — this is what powers the no-friction start.
+- Email/password enabled (default).
+- Google sign-in enabled (Cloud default; managed credentials, zero config).
+- No auto-confirm email — standard verification flow.
+- Claim flow uses `supabase.auth.updateUser({ email, password })` on the existing anonymous user, which preserves `auth.uid()` and therefore all their data.
 
-### Step 3 — Pick a single direction (one pick, applied everywhere)
-After Landing directions render, present them as a `prototype` question: *"Which direction should I build?"* The chosen direction (A/B/C) is then carried as the structural template through Onboarding, Interview, Completion — same hero alignment, same component counts, same density, same motion register.
+## Sync strategy
 
-If you'd rather pick per-surface (e.g. Broadsheet for Landing, Galley for Interview), say so before Step 3 and the plan adjusts to 4 separate pickers.
+- `interview-store.ts` keeps localStorage as the fast path (offline resilience, instant UI).
+- A new `interview-sync.ts` layer mirrors writes to Cloud with a 500ms debounce per answer. Draft textarea syncs at 2s debounce.
+- On app load: if authenticated, fetch the Cloud session and merge — Cloud wins on conflict (last-write-wins by `last_synced_at`).
+- Sync status surfaces in the top bar marginalia.
 
-### Step 4 — Implementation pass
-Once a direction is chosen:
+## Out of scope
 
-1. **Tokens** — confirm `src/index.css` + `tailwind.config.ts` match DESIGN.md exactly; fix any drift. Add any new semantic tokens introduced by the direction (e.g. `--vd-rule`, `--vd-marginalia`).
-2. **Type system** — register Lora / DM Sans / JetBrains Mono via Google Fonts in `index.html`; expose `font-serif-question`, `font-sans`, `font-mono-label`, `font-mono-data` utilities.
-3. **Landing** (`src/pages/Landing.tsx`) — rebuild hero per chosen direction; keep pyramid + waveform motifs (per project memory).
-4. **Onboarding** (`src/pages/Onboarding.tsx`) — restyle the 3 steps as numbered "Stages" with magazine chrome; keep state logic untouched.
-5. **Interview** (`src/pages/Interview.tsx` + `components/interview/*`) — restyle sidebar, top bar, question bubble (serif), pushback state (amber), user answer (sans), input area. Behavior and store stay as-is.
-6. **Completion** (`src/pages/Completion.tsx`) — restyle as a "published issue" page with waveform sigil and download CTA.
-7. **Mobile** — collapse magazine grid to single column; sidebar becomes horizontal progress dots (per memory).
-8. **QA** — full-page screenshot of each redesigned surface at desktop + mobile widths; verify against direction prototype.
+- Real AI follow-ups (still mock).
+- Password reset flow (can add later — would need a `/reset-password` page).
+- Multiple concurrent interviews per user.
+- Real-time collaboration / multi-tab conflict resolution beyond last-write-wins.
 
-### Out of scope
-- Wiring Gemini / Lovable AI (still mock).
-- Auth, database persistence.
-- Dark mode toggle (DESIGN.md marks it optional).
-- Any change to the interview store or question dataset.
+## Implementation order
 
-### Deliverables
-- `docs/` populated and indexed.
-- Three rendered direction previews for Landing (clickable).
-- After your pick: redesigned Landing → Onboarding → Interview → Completion, mobile-responsive, tokens centralized.
+1. Migration: `profiles` + `interview_sessions` tables, RLS, GRANTs, signup trigger that generates a unique `session_code`.
+2. Enable anonymous auth + confirm Google provider via `configure_auth` / `configure_social_auth`.
+3. `src/lib/auth.ts` — anonymous bootstrap, claim-with-email, sign-in, sign-out, `onAuthStateChange` listener.
+4. `src/lib/interview-sync.ts` — debounced push/pull between `interview-store` and Cloud.
+5. `/auth` page (email + password + Google) and `/restore` page (session code input).
+6. Wire Onboarding → creates anonymous user on completion.
+7. Wire Interview → sync answers + draft; show session code & sync pill in top bar.
+8. Wire Completion → "Claim with email" card.
+9. Wire Landing → resume banner + "Have a session code?" link.
+10. QA: fresh start → answer → close tab → reopen on "other device" (incognito) → restore via code → claim with email → sign out → sign in → data intact.

@@ -49,7 +49,11 @@ const Onboarding = () => {
   const [name, setName] = useState("");
   const [mode, setMode] = useState<InterviewMode>("quick-profile");
 
-  const handleStart = () => {
+  const [starting, setStarting] = useState(false);
+
+  const handleStart = async () => {
+    if (starting) return;
+    setStarting(true);
     const state = {
       userName: name,
       mode,
@@ -63,6 +67,15 @@ const Onboarding = () => {
       status: "in_progress" as const,
     };
     localStorage.setItem("voicedna-interview", JSON.stringify(state));
+    try {
+      const { ensureAnonymousUser, updateDisplayName } = await import("@/lib/auth");
+      const { pushNow } = await import("@/lib/interview-sync");
+      await ensureAnonymousUser();
+      await updateDisplayName(name);
+      await pushNow(state as any);
+    } catch (e) {
+      console.warn("[onboarding] cloud bootstrap failed (continuing offline)", e);
+    }
     navigate("/interview");
   };
 

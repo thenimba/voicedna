@@ -7,6 +7,7 @@ import Landing from "./pages/Landing";
 import Onboarding from "./pages/Onboarding";
 import Interview from "./pages/Interview";
 import Completion from "./pages/Completion";
+import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -22,6 +23,7 @@ const App = () => (
           <Route path="/onboarding" element={<Onboarding />} />
           <Route path="/interview" element={<Interview />} />
           <Route path="/completion" element={<Completion />} />
+          <Route path="/auth" element={<Auth />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
