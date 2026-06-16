@@ -3,10 +3,12 @@ import { Check, Loader2, AlertCircle, Copy } from "lucide-react";
 import { onSyncStatus, type SyncStatus } from "@/lib/interview-sync";
 import { getProfile, type Profile } from "@/lib/auth";
 import { toast } from "sonner";
+import { useT } from "@/lib/i18n";
 
 export const SyncIndicator = () => {
   const [status, setStatus] = useState<SyncStatus>("idle");
   const [profile, setProfile] = useState<Profile | null>(null);
+  const { t } = useT();
 
   useEffect(() => {
     getProfile().then(setProfile);
@@ -16,7 +18,7 @@ export const SyncIndicator = () => {
   const copyCode = async () => {
     if (!profile?.session_code) return;
     await navigator.clipboard.writeText(profile.session_code);
-    toast.success("Session code copied");
+    toast.success(t("sync.copied"));
   };
 
   const icon = {
@@ -28,11 +30,11 @@ export const SyncIndicator = () => {
   }[status];
 
   const label = {
-    idle: "Ready",
-    syncing: "Syncing…",
-    synced: "Synced",
-    error: "Retry pending",
-    offline: "Offline",
+    idle: t("sync.idle"),
+    syncing: t("sync.syncing"),
+    synced: t("sync.synced"),
+    error: t("sync.error"),
+    offline: t("sync.offline"),
   }[status];
 
   return (
@@ -40,8 +42,9 @@ export const SyncIndicator = () => {
       {profile?.session_code && (
         <button
           onClick={copyCode}
-          title="Copy session code"
+          title={t("sync.copy")}
           className="font-mono-label text-[10px] tracking-[0.14em] text-vd-t3 hover:text-vd-t1 transition-colors flex items-center gap-1.5"
+          dir="ltr"
         >
           {profile.session_code}
           <Copy className="w-3 h-3" />

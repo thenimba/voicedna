@@ -1,4 +1,5 @@
 import { ArrowRight } from "lucide-react";
+import { useT } from "@/lib/i18n";
 
 interface Props {
   answer: string;
@@ -21,6 +22,7 @@ export const InputArea = ({
   wordCount,
   placeholder,
 }: Props) => {
+  const { t } = useT();
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if ((e.metaKey || e.ctrlKey) && e.key === "Enter") onSubmit();
   };
@@ -30,10 +32,10 @@ export const InputArea = ({
       <div className="border border-vd-border focus-within:border-vd-accent transition-colors bg-vd-paper/40">
         <div className="flex items-center justify-between px-4 pt-3 pb-1">
           <span className="font-mono-label text-[9px] tracking-[0.18em] text-vd-t3">
-            COMPOSE
+            {t("iv.compose")}
           </span>
           <span className="font-mono-data text-[10px] text-vd-t3">
-            {wordCount} {wordCount === 1 ? "word" : "words"}
+            {wordCount} {wordCount === 1 ? t("iv.word") : t("iv.words")}
           </span>
         </div>
         <textarea
@@ -51,11 +53,11 @@ export const InputArea = ({
           {autoSaved ? (
             <span className="font-mono-label text-[10px] tracking-[0.14em] text-vd-green flex items-center gap-1.5">
               <span className="w-1.5 h-1.5 rounded-full bg-vd-green" />
-              Auto-saved
+              {t("iv.autosaved")}
             </span>
           ) : (
             <span className="font-mono-label text-[10px] tracking-[0.14em] text-vd-t3">
-              Press ⌘ + Enter to submit
+              {t("iv.submitHint")}
             </span>
           )}
         </div>
@@ -66,7 +68,7 @@ export const InputArea = ({
               onClick={onSkip}
               className="font-mono-label text-[10px] tracking-[0.14em] text-vd-t3 hover:text-vd-t2 transition-colors"
             >
-              Skip →
+              {t("iv.skip")}
             </button>
           )}
           <button
@@ -78,8 +80,8 @@ export const InputArea = ({
                 : "bg-vd-accent hover:bg-vd-accent-text"
             }`}
           >
-            {isFollowUp ? "Continue" : "Submit Answer"}
-            <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
+            {isFollowUp ? t("iv.continue") : t("iv.submit")}
+            <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5 rtl:rotate-180 rtl:group-hover:-translate-x-0.5" />
           </button>
         </div>
       </div>
