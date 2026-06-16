@@ -1,64 +1,68 @@
-# Cloud Backup for Interview Sessions
+# Add Hebrew (RTL) Support
 
-Persist interview progress to Lovable Cloud so users can resume on any device. Anonymous by default (no friction to start), with an optional "claim with email" step to lock the session to an account.
+Add a Hebrew locale alongside English with a top-bar toggle. Hebrew flips the entire app to RTL and translates all UI chrome plus the 100 interview questions, category names, follow-up pushbacks, and onboarding copy.
 
-## How it works for the user
+## Scope
 
-1. **Start an interview** — on first answer we mint an anonymous Supabase auth session for them. A short **session code** (e.g. `VD-7F3K-Q9XM`) appears in the top bar; they can copy it.
-2. **Switch device / lose tab** — on Landing, an input lets them paste a session code to restore. Or if they've already claimed with email, they can sign in.
-3. **Claim a session** — anytime (and prominently on Completion), a "Save to email" button converts the anonymous user to a permanent account with email + password. Same data, now recoverable by sign-in.
-4. **Returning users** — Landing detects existing session and shows "Resume interview (12/45 answered)" instead of pushing them through onboarding again.
+In:
+- EN / עב toggle pill in the PageFrame top bar (persisted in `localStorage` as `voicedna.lang`)
+- `<html lang>` and `<html dir>` flip live on change
+- All UI chrome strings translated (Landing, Onboarding, Interview chrome, Completion, Auth, SyncIndicator, InputArea, sidebar, marginalia, status footer, buttons, toasts)
+- All 100 interview questions + 7 category names + follow-up pushback lines translated to Hebrew
+- Tailwind RTL-aware spacing/borders on the few asymmetric components (sidebar border, QuestionBubble left rule, InputArea hints)
 
-## Surfaces touched
+Out:
+- No language detection from browser (manual toggle only, default English)
+- No translation of stored answers, session codes, or .md export content
+- No translation of `/docs` markdown
+- No AI/runtime translation — all strings are static dictionaries
 
-- **Landing** — add a small "Have a session code? / Sign in" affordance + auto-resume banner when a local session exists.
-- **Onboarding** — on Stage 3 (Briefing complete), create the anonymous auth user and write the initial session row to Cloud.
-- **Interview top bar** — show the session code with a copy button; show sync status ("Synced 2s ago" / "Offline — will sync").
-- **Interview** — every answer write is mirrored to Cloud (debounced). Draft textarea also persisted.
-- **Completion** — prominent "Claim with email" card if still anonymous. After claim, show "Saved to {email}".
-- **New `/restore` route** — paste session code → restore state and resume.
-- **New `/auth` route** — minimal sign-in / sign-up screen (email + password, plus Google sign-in by default per Cloud guidance).
+## Approach
 
-## Data model (Cloud)
+Lightweight in-house i18n — no extra library — to keep bundle small and match existing minimal stack.
 
-Two tables, both keyed to `auth.users(id)`:
+1. `src/lib/i18n/types.ts` — `Lang = "en" | "he"`, `Dictionary` shape
+2. `src/lib/i18n/en.ts` and `src/lib/i18n/he.ts` — full string dictionaries:
+   - `ui.*` — every visible label, button, placeholder, status, marginalia
+   - `categories.<id>` — translated category names (ids stay stable in storage)
+   - `questions.<categoryId>[]` — Hebrew translations index-aligned with English
+   - `followUps[]` — translated pushback lines
+3. `src/lib/i18n/index.ts` — `LangProvider` context + `useT()` hook returning `{ t, lang, setLang, dir }`. On mount and on `setLang`, sets `document.documentElement.lang` and `dir`. Persists to `localStorage`.
+4. `src/components/LangToggle.tsx` — small EN / עב pill, mono-label styling, placed in `PageFrame` header next to the room tag.
+5. Wrap `<App />` in `<LangProvider>` in `src/main.tsx`.
+6. Refactor `src/lib/questions.ts`:
+   - Keep `CATEGORIES` ids/counts/icons as the source of truth
+   - Move all English strings into `en.ts`
+   - Add `getQuestion(categoryId, index, lang)` and `getCategoryName(id, lang)` helpers used by the interview store
+   - `INITIAL_QUESTIONS` becomes a per-language lookup
+7. Update `interview-store.ts` selector that picks the current question to read from the active language dictionary (question text in `qaPairs` is captured at submit time in whatever language the user saw — that snapshot stays as-is).
+8. Update each page/component to use `t(...)` for hardcoded strings.
+9. RTL polish:
+   - Add `dir="rtl"` aware utility classes where order matters (`flex-row-reverse` only where the asymmetric editorial layout demands it — Landing 7/5 grid keeps reading order, just text-aligns right)
+   - `QuestionBubble` border-left becomes border-right in RTL (`rtl:border-l-0 rtl:border-r-2 rtl:pl-0 rtl:pr-6`)
+   - `InterviewSidebar` right border becomes left border in RTL
+   - Arrow icons (`ArrowRight`) flip via `rtl:rotate-180` on the icon
 
-- **`profiles`** — one row per user. Fields: `display_name`, `session_code` (unique, the short shareable code), `is_claimed` (false for anonymous, true after email claim). Auto-created by trigger on signup.
-- **`interview_sessions`** — one row per interview. Fields: `user_id` (FK to auth.users), `user_name`, `mode`, `status`, `current_category_index`, `current_question_in_category`, `total_questions_answered`, `current_question`, `is_follow_up`, `follow_up_count`, `qa_pairs` (jsonb array), `draft_answer` (in-progress textarea), `last_synced_at`. RLS: users see only their own rows.
+## Technical Notes
 
-GRANTs on both tables: `authenticated` (full CRUD on own rows via RLS), `service_role` (all).
+```
+src/lib/i18n/
+  ├── types.ts        // Lang, Dictionary
+  ├── en.ts           // English dictionary (source of truth, mirrors current copy)
+  ├── he.ts           // Hebrew translations (index-aligned)
+  └── index.ts        // LangProvider, useT(), <html dir/lang> sync
 
-## Auth configuration
+src/components/LangToggle.tsx
+```
 
-- Enable **anonymous sign-ins** (`external_anonymous_users_enabled: true`) — this is what powers the no-friction start.
-- Email/password enabled (default).
-- Google sign-in enabled (Cloud default; managed credentials, zero config).
-- No auto-confirm email — standard verification flow.
-- Claim flow uses `supabase.auth.updateUser({ email, password })` on the existing anonymous user, which preserves `auth.uid()` and therefore all their data.
+- Storage key: `voicedna.lang` (default `"en"`)
+- Tailwind already supports `rtl:` variants in v3 — no config change needed
+- `qaPairs[].question` keeps whatever language was shown at submit time, so changing language mid-interview doesn't rewrite history
+- Category `id` stays English in DB/localStorage; only the displayed `name` is translated
 
-## Sync strategy
+## Out of Scope
 
-- `interview-store.ts` keeps localStorage as the fast path (offline resilience, instant UI).
-- A new `interview-sync.ts` layer mirrors writes to Cloud with a 500ms debounce per answer. Draft textarea syncs at 2s debounce.
-- On app load: if authenticated, fetch the Cloud session and merge — Cloud wins on conflict (last-write-wins by `last_synced_at`).
-- Sync status surfaces in the top bar marginalia.
-
-## Out of scope
-
-- Real AI follow-ups (still mock).
-- Password reset flow (can add later — would need a `/reset-password` page).
-- Multiple concurrent interviews per user.
-- Real-time collaboration / multi-tab conflict resolution beyond last-write-wins.
-
-## Implementation order
-
-1. Migration: `profiles` + `interview_sessions` tables, RLS, GRANTs, signup trigger that generates a unique `session_code`.
-2. Enable anonymous auth + confirm Google provider via `configure_auth` / `configure_social_auth`.
-3. `src/lib/auth.ts` — anonymous bootstrap, claim-with-email, sign-in, sign-out, `onAuthStateChange` listener.
-4. `src/lib/interview-sync.ts` — debounced push/pull between `interview-store` and Cloud.
-5. `/auth` page (email + password + Google) and `/restore` page (session code input).
-6. Wire Onboarding → creates anonymous user on completion.
-7. Wire Interview → sync answers + draft; show session code & sync pill in top bar.
-8. Wire Completion → "Claim with email" card.
-9. Wire Landing → resume banner + "Have a session code?" link.
-10. QA: fresh start → answer → close tab → reopen on "other device" (incognito) → restore via code → claim with email → sign out → sign in → data intact.
+- Hebrew translations of the exported `.md` voice file
+- Translating the `/docs` markdown files
+- Hebrew error messages from Supabase auth (those come from the backend)
+- Date/number formatting (not currently displayed)
