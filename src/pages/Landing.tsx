@@ -15,7 +15,7 @@ const Landing = () => {
     <PageFrame
       protocolTag="VoiceDNA / Protocol 02"
       roomTag="The Interview Room"
-      refLabel="REF · VD_LANDING_001"
+      ref="REF · VD_LANDING_001"
     >
       <div className="grid grid-cols-1 lg:grid-cols-12 flex-1">
         {/* Left: editorial column (7) */}
