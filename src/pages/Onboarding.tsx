@@ -64,7 +64,6 @@ const Onboarding = () => {
       currentQuestion: INITIAL_QUESTIONS[CATEGORIES[0].id][0],
       isFollowUp: false,
       followUpCount: 0,
-      followUpCountTotal: 0,
       status: "in_progress" as const,
     };
     localStorage.setItem("voicedna-interview", JSON.stringify(state));
