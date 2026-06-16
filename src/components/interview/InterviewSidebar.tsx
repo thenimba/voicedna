@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router-dom";
 import type { Category } from "@/lib/questions";
 
 interface Props {
@@ -6,65 +7,96 @@ interface Props {
   categoryProgress: { completed: number; total: number }[];
 }
 
-export const InterviewSidebar = ({ categories, currentCategoryIndex, categoryProgress }: Props) => {
+export const InterviewSidebar = ({
+  categories,
+  currentCategoryIndex,
+  categoryProgress,
+}: Props) => {
+  const navigate = useNavigate();
+  const totalAnswered = categoryProgress.reduce((s, p) => s + p.completed, 0);
+  const totalQuestions = categoryProgress.reduce((s, p) => s + p.total, 0);
+
   return (
-    <aside className="hidden lg:flex flex-col w-[196px] bg-vd-surface border-r border-vd-border shrink-0">
-      {/* Logo */}
-      <div className="px-5 py-5">
-        <div className="flex items-baseline gap-0">
-          <span className="text-base font-sans italic text-vd-t1">VoiceDNA</span>
-        </div>
-        <p className="font-mono-label text-[9px] text-vd-t3 mt-0.5">
-          The Interview Room
+    <aside className="hidden lg:flex flex-col w-[240px] bg-vd-cream border-r border-vd-border shrink-0">
+      <div className="px-6 pt-6 pb-4 border-b border-vd-border-strong/50">
+        <p className="font-mono-label text-[10px] tracking-[0.2em] text-vd-t3 mb-2">
+          _Categories
+        </p>
+        <p className="font-serif-question text-[14px] text-vd-t2 leading-snug">
+          <span className="text-vd-t1 font-medium">{totalAnswered}</span>
+          <span className="text-vd-t3"> / {totalQuestions} answered</span>
         </p>
       </div>
 
-      {/* Categories */}
-      <nav className="flex-1 py-4 space-y-0.5">
+      <nav className="flex-1 py-3 overflow-y-auto">
         {categories.map((cat, i) => {
           const progress = categoryProgress[i];
           const isDone = progress.completed >= progress.total;
           const isActive = i === currentCategoryIndex;
-          const isUpcoming = i > currentCategoryIndex;
 
           return (
             <div
               key={cat.id}
-              className={`flex items-center gap-3 px-5 py-2 text-[13px] ${
+              className={`px-6 py-3 border-l-2 transition-colors ${
                 isActive
-                  ? "bg-vd-accent-bg text-vd-accent-text font-medium"
-                  : isDone
-                  ? "opacity-55 text-vd-t2"
-                  : "opacity-45 text-vd-t2"
+                  ? "border-l-vd-accent bg-vd-accent-bg"
+                  : "border-l-transparent hover:bg-vd-surface/60"
               }`}
             >
-              {/* Status dot */}
-              <span className="flex items-center justify-center w-[15px] h-[15px] shrink-0">
+              <div className="flex items-center justify-between mb-1">
+                <span className="font-mono-label text-[9px] text-vd-t3">
+                  0{i + 1}
+                </span>
                 {isDone ? (
-                  <span className="w-[15px] h-[15px] rounded-full bg-vd-green-bg flex items-center justify-center">
-                    <span className="text-vd-green text-[9px]">✓</span>
+                  <span className="font-mono-label text-[9px] text-vd-green">
+                    ✓ DONE
                   </span>
                 ) : isActive ? (
-                  <span className="w-[15px] h-[15px] rounded-full bg-vd-accent flex items-center justify-center">
-                    <span className="text-primary-foreground text-[8px]">→</span>
+                  <span className="font-mono-label text-[9px] text-vd-accent-text">
+                    ACTIVE
                   </span>
                 ) : (
-                  <span className="w-[15px] h-[15px] rounded-full border border-vd-border" />
+                  <span className="font-mono-label text-[9px] text-vd-t3">
+                    {progress.completed}/{progress.total}
+                  </span>
                 )}
-              </span>
-              <span>{cat.name}</span>
-              {isActive && (
-                <span className="ml-auto text-vd-accent text-[10px]">›</span>
-              )}
+              </div>
+              <p
+                className={`font-serif-question text-[15px] leading-tight ${
+                  isActive
+                    ? "text-vd-t1 font-medium"
+                    : isDone
+                    ? "text-vd-t2"
+                    : "text-vd-t2"
+                }`}
+              >
+                {cat.name}
+              </p>
+              <div className="mt-2 h-[2px] bg-vd-border-strong/40 overflow-hidden">
+                <div
+                  className={`h-full transition-all duration-300 ${
+                    isDone ? "bg-vd-green" : "bg-vd-accent"
+                  }`}
+                  style={{
+                    width: `${
+                      progress.total
+                        ? (progress.completed / progress.total) * 100
+                        : 0
+                    }%`,
+                  }}
+                />
+              </div>
             </div>
           );
         })}
       </nav>
 
-      {/* New Session button */}
-      <div className="p-4">
-        <button className="w-full flex items-center justify-center gap-2 bg-vd-accent text-primary-foreground rounded-md px-4 py-2.5 text-[12px] font-medium hover:opacity-90 active:scale-[0.97] transition-all">
-          + New Session
+      <div className="p-4 border-t border-vd-border-strong/50">
+        <button
+          onClick={() => navigate("/")}
+          className="w-full text-center font-mono-label text-[10px] tracking-[0.16em] text-vd-t3 hover:text-vd-t2 transition-colors py-2"
+        >
+          ← Exit Interview
         </button>
       </div>
     </aside>

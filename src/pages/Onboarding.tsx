@@ -3,8 +3,17 @@ import { useNavigate } from "react-router-dom";
 import { ArrowRight, Zap, Settings, Filter } from "lucide-react";
 import type { InterviewMode } from "@/lib/interview-store";
 import { CATEGORIES, INITIAL_QUESTIONS } from "@/lib/questions";
+import { PageFrame } from "@/components/layout/PageFrame";
 
-const modes: { id: InterviewMode; icon: React.ReactNode; title: string; time: string; type: string; desc: string; recommended?: boolean }[] = [
+const modes: {
+  id: InterviewMode;
+  icon: React.ReactNode;
+  title: string;
+  time: string;
+  type: string;
+  desc: string;
+  recommended?: boolean;
+}[] = [
   {
     id: "deep-dive",
     icon: <Settings className="w-5 h-5 text-vd-accent" />,
@@ -32,6 +41,8 @@ const modes: { id: InterviewMode; icon: React.ReactNode; title: string; time: st
   },
 ];
 
+const STAGE_LABELS = ["Identity", "Method", "Briefing"];
+
 const Onboarding = () => {
   const navigate = useNavigate();
   const [step, setStep] = useState(0);
@@ -56,168 +67,256 @@ const Onboarding = () => {
   };
 
   return (
-    <div className="min-h-screen bg-vd-paper flex flex-col">
-      {/* Top bar */}
-      <nav className="flex items-center gap-4 px-8 py-4 border-b border-vd-border">
-        <span className="text-base font-sans font-medium text-vd-t1">VoiceDNA</span>
-        <span className="text-vd-border">|</span>
-        <span className="font-mono-label text-[10px] text-vd-t3">
-          Onboarding Stage {step + 1}
-        </span>
-        <div className="flex-1" />
-        <span className="font-mono-data text-[11px] text-vd-t3">
-          Section Progress: {step + 1}/3
-        </span>
-      </nav>
+    <PageFrame
+      protocolTag={`VoiceDNA / Stage 0${step + 1}`}
+      roomTag="The Interview Room"
+      refLabel={`STAGE ${step + 1} / 03 · ${STAGE_LABELS[step].toUpperCase()}`}
+    >
+      <div className="grid grid-cols-1 lg:grid-cols-12 flex-1">
+        {/* Left rail: stages */}
+        <aside className="lg:col-span-3 bg-vd-cream p-8 md:p-10 border-b lg:border-b-0 lg:border-r border-vd-border">
+          <p className="font-mono-label text-[10px] tracking-[0.2em] text-vd-t3 mb-8">
+            _Stages
+          </p>
 
-      {/* Progress bar */}
-      <div className="h-[2px] bg-vd-border">
-        <div
-          className="h-full bg-vd-accent transition-[width] duration-400"
-          style={{ width: `${((step + 1) / 3) * 100}%` }}
-        />
-      </div>
-
-      <main className="flex-1 flex items-center justify-center px-6 py-12">
-        {/* Step 1: Name */}
-        {step === 0 && (
-          <div className="max-w-md w-full text-center space-y-8 animate-fade-in">
-            <p className="font-mono-label text-[11px] text-vd-accent-text tracking-widest">
-              The Interview Room
-            </p>
-            <h1 className="font-serif-question text-[26px] leading-[1.3] text-vd-t1">
-              Before we begin, what should we call you?
-            </h1>
-            <p className="text-[13px] text-vd-t2 leading-relaxed">
-              This name will be used in your final voice profile document.
-            </p>
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Enter your name"
-              className="w-full px-4 py-3 bg-vd-surface border border-vd-border rounded-md text-sm text-vd-t1 placeholder:text-vd-t3 focus:outline-none focus:border-vd-border-strong transition-colors"
-              autoFocus
-            />
-            <button
-              onClick={() => name.trim() && setStep(1)}
-              disabled={!name.trim()}
-              className="inline-flex items-center gap-2 bg-vd-accent text-primary-foreground rounded-md px-6 py-2.5 text-xs font-medium disabled:opacity-40 hover:opacity-90 active:scale-[0.97] transition-all"
-            >
-              Continue
-              <ArrowRight className="w-3.5 h-3.5" />
-            </button>
-          </div>
-        )}
-
-        {/* Step 2: Mode selection */}
-        {step === 1 && (
-          <div className="max-w-3xl w-full text-center space-y-8 animate-fade-in">
-            <p className="font-mono-label text-[11px] text-vd-accent-text tracking-widest">
-              The Interview Room
-            </p>
-            <h1 className="font-serif-question text-[26px] leading-[1.3] text-vd-t1">
-              Choose your interview style.
-            </h1>
-            <p className="text-[13px] text-vd-t2 leading-relaxed max-w-lg mx-auto">
-              To capture the true essence of your voice, we need to determine the depth of our exploration. Select the method that best fits your current availability.
-            </p>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-left mt-8">
-              {modes.map((m) => {
-                const selected = mode === m.id;
-                return (
-                  <button
-                    key={m.id}
-                    onClick={() => setMode(m.id)}
-                    className={`relative p-5 rounded-lg border-2 transition-colors duration-150 text-left ${
-                      selected
-                        ? "border-vd-accent bg-vd-accent-bg"
-                        : "border-vd-border bg-vd-surface hover:border-vd-border-strong"
+          <ol className="space-y-7">
+            {STAGE_LABELS.map((label, i) => {
+              const isActive = i === step;
+              const isDone = i < step;
+              return (
+                <li key={label} className="flex items-start gap-4">
+                  <div
+                    className={`shrink-0 mt-0.5 w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-medium ${
+                      isActive
+                        ? "bg-vd-accent text-primary-foreground"
+                        : isDone
+                        ? "bg-vd-green-bg text-vd-green"
+                        : "border border-vd-border-strong text-vd-t3"
                     }`}
                   >
-                    {selected && (
-                      <span className="absolute -top-3 left-1/2 -translate-x-1/2 font-mono-label text-[9px] bg-vd-accent text-primary-foreground px-2 py-0.5 rounded-sm">
-                        Current Selection
-                      </span>
-                    )}
-                    {m.recommended && !selected && (
-                      <span className="absolute top-4 right-4 font-mono-label text-[9px] border border-vd-border text-vd-t3 px-2 py-0.5 rounded-sm">
-                        Recommended
-                      </span>
-                    )}
-                    <div className="mb-4">{m.icon}</div>
-                    <h3 className="text-base font-sans font-medium text-vd-t1 mb-1">{m.title}</h3>
-                    <p className="font-mono-label text-[10px] text-vd-accent-text mb-3">
-                      {m.time} · {m.type}
+                    {isDone ? "✓" : i + 1}
+                  </div>
+                  <div className="space-y-1 min-w-0">
+                    <p className="font-mono-label text-[9px] text-vd-t3">
+                      STEP 0{i + 1}
                     </p>
-                    <p className="text-[12px] text-vd-t2 leading-relaxed">{m.desc}</p>
-                    <div className="mt-4">
-                      {selected ? (
-                        <span className="text-[12px] font-medium text-vd-accent-text">Selected Strategy ✓</span>
-                      ) : (
-                        <span className="text-[12px] font-medium text-vd-accent-text flex items-center gap-1">
-                          {m.id === "deep-dive" ? "Begin Analysis" : "Select Mode"} <ArrowRight className="w-3 h-3" />
-                        </span>
-                      )}
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
+                    <p
+                      className={`font-serif-question text-[16px] leading-tight ${
+                        isActive ? "text-vd-t1" : "text-vd-t2"
+                      }`}
+                    >
+                      {label}
+                    </p>
+                  </div>
+                </li>
+              );
+            })}
+          </ol>
 
-            <button
-              onClick={() => setStep(2)}
-              className="inline-flex items-center gap-2 bg-vd-accent text-primary-foreground rounded-md px-6 py-2.5 text-xs font-medium hover:opacity-90 active:scale-[0.97] transition-all"
-            >
-              Continue to Environment Setup
-              <ArrowRight className="w-3.5 h-3.5" />
-            </button>
-          </div>
-        )}
-
-        {/* Step 3: Explainer */}
-        {step === 2 && (
-          <div className="max-w-md w-full text-center space-y-8 animate-fade-in">
-            <p className="font-mono-label text-[11px] text-vd-accent-text tracking-widest">
-              Protocol Briefing
+          <div className="hidden lg:block mt-12 pt-6 border-t border-vd-border-strong/60">
+            <p className="font-serif-question italic text-[13px] leading-relaxed text-vd-t2">
+              "Be specific. The interviewer pushes back on vague answers."
             </p>
-            <h1 className="font-serif-question text-[26px] leading-[1.3] text-vd-t1">
-              How this works.
-            </h1>
-            <div className="text-left space-y-4 text-[13px] text-vd-t2 leading-relaxed bg-vd-surface border border-vd-border rounded-lg p-6">
-              <p>
-                The AI interviewer will ask you {100} questions across 7 categories about your writing voice, beliefs, and style.
-              </p>
-              <p>
-                It will push back on vague answers — max 2 follow-ups per question before moving on. It may request specific examples when answers are abstract.
-              </p>
-              <p className="font-medium text-vd-t1">
-                Be honest. Be specific. The more precise you are, the better your voice profile will be.
-              </p>
-              <p className="text-vd-t3 text-[11px] font-mono-data">
-                Your progress is auto-saved. You can close and resume at any time.
-              </p>
-            </div>
-            <button
-              onClick={handleStart}
-              className="inline-flex items-center gap-2 bg-vd-accent text-primary-foreground rounded-md px-7 py-3 text-sm font-medium hover:opacity-90 active:scale-[0.97] transition-all"
-            >
-              Begin Interview
-              <ArrowRight className="w-4 h-4" />
-            </button>
           </div>
-        )}
-      </main>
+        </aside>
 
-      {/* Footer */}
-      <footer className="py-4 text-center">
-        <p className="font-mono-data text-[10px] text-vd-t3 flex items-center justify-center gap-2">
-          <span className="w-1.5 h-1.5 rounded-full bg-vd-green" />
-          Secure Interview Protocol Active
-        </p>
-      </footer>
-    </div>
+        {/* Right: stage body */}
+        <section className="lg:col-span-9 p-8 md:p-14 lg:p-20 flex flex-col justify-center">
+          {/* Step 1: Name */}
+          {step === 0 && (
+            <div className="max-w-xl animate-fade-in">
+              <span className="font-mono-label text-[11px] tracking-[0.18em] text-vd-accent-text block mb-6">
+                Identity · Step 01
+              </span>
+              <h1 className="font-serif-question text-[clamp(1.75rem,4vw,2.5rem)] leading-[1.15] text-vd-t1 mb-6">
+                Before we begin,
+                <br />
+                <span className="italic">what should we call you?</span>
+              </h1>
+              <p className="text-[14px] text-vd-t2 leading-relaxed mb-10 max-w-md">
+                This name will be used in your final voice profile document.
+              </p>
+
+              <label className="block">
+                <span className="font-mono-label text-[10px] text-vd-t3 block mb-2">
+                  Your name
+                </span>
+                <input
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="e.g. Adam Smith"
+                  className="w-full max-w-md px-4 py-3 bg-vd-surface border border-vd-border text-[15px] text-vd-t1 placeholder:text-vd-t3 focus:outline-none focus:border-vd-accent transition-colors"
+                  autoFocus
+                />
+              </label>
+
+              <div className="mt-10 flex items-center gap-6">
+                <button
+                  onClick={() => name.trim() && setStep(1)}
+                  disabled={!name.trim()}
+                  className="group inline-flex items-center gap-3 bg-vd-accent text-primary-foreground px-6 py-3 text-[12px] font-medium disabled:opacity-40 hover:bg-vd-accent-text active:translate-y-px transition-all"
+                >
+                  Continue
+                  <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
+                </button>
+                <span className="font-mono-label text-[10px] tracking-[0.16em] text-vd-t3">
+                  Enter ↵
+                </span>
+              </div>
+            </div>
+          )}
+
+          {/* Step 2: Mode selection */}
+          {step === 1 && (
+            <div className="animate-fade-in">
+              <span className="font-mono-label text-[11px] tracking-[0.18em] text-vd-accent-text block mb-6">
+                Method · Step 02
+              </span>
+              <h1 className="font-serif-question text-[clamp(1.75rem,4vw,2.5rem)] leading-[1.15] text-vd-t1 mb-6">
+                Choose your <span className="italic">interview style.</span>
+              </h1>
+              <p className="text-[14px] text-vd-t2 leading-relaxed mb-10 max-w-lg">
+                To capture the true essence of your voice, we need to determine
+                the depth of our exploration. Select the method that fits your
+                current availability.
+              </p>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10">
+                {modes.map((m, i) => {
+                  const selected = mode === m.id;
+                  return (
+                    <button
+                      key={m.id}
+                      onClick={() => setMode(m.id)}
+                      className={`relative text-left p-5 border transition-colors duration-150 ${
+                        selected
+                          ? "border-vd-accent bg-vd-accent-bg"
+                          : "border-vd-border bg-vd-surface hover:border-vd-border-strong"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between mb-4">
+                        <span className="font-mono-label text-[9px] text-vd-t3">
+                          0{i + 1} / OPTION
+                        </span>
+                        {m.recommended && (
+                          <span className="font-mono-label text-[9px] border border-vd-border text-vd-t3 px-1.5 py-0.5">
+                            Recommended
+                          </span>
+                        )}
+                      </div>
+                      <div className="mb-3">{m.icon}</div>
+                      <h3 className="font-serif-question text-[18px] text-vd-t1 mb-1">
+                        {m.title}
+                      </h3>
+                      <p className="font-mono-label text-[10px] text-vd-accent-text mb-3">
+                        {m.time} · {m.type}
+                      </p>
+                      <p className="text-[12px] text-vd-t2 leading-relaxed">
+                        {m.desc}
+                      </p>
+                      <div className="mt-4 pt-3 border-t border-vd-border/70">
+                        {selected ? (
+                          <span className="text-[11px] font-medium text-vd-accent-text">
+                            Selected ✓
+                          </span>
+                        ) : (
+                          <span className="text-[11px] font-medium text-vd-t3 flex items-center gap-1">
+                            Select <ArrowRight className="w-3 h-3" />
+                          </span>
+                        )}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div className="flex items-center gap-6">
+                <button
+                  onClick={() => setStep(2)}
+                  className="group inline-flex items-center gap-3 bg-vd-accent text-primary-foreground px-6 py-3 text-[12px] font-medium hover:bg-vd-accent-text active:translate-y-px transition-all"
+                >
+                  Continue to Briefing
+                  <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
+                </button>
+                <button
+                  onClick={() => setStep(0)}
+                  className="font-mono-label text-[10px] tracking-[0.16em] text-vd-t3 hover:text-vd-t2 transition-colors"
+                >
+                  ← Back
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Step 3: Explainer */}
+          {step === 2 && (
+            <div className="max-w-xl animate-fade-in">
+              <span className="font-mono-label text-[11px] tracking-[0.18em] text-vd-accent-text block mb-6">
+                Briefing · Step 03
+              </span>
+              <h1 className="font-serif-question text-[clamp(1.75rem,4vw,2.5rem)] leading-[1.15] text-vd-t1 mb-8">
+                How this <span className="italic">works.</span>
+              </h1>
+
+              <ol className="space-y-5 text-[14px] text-vd-t2 leading-relaxed mb-10">
+                <li className="flex gap-4">
+                  <span className="font-mono-label text-[10px] text-vd-t3 mt-1 shrink-0">
+                    01
+                  </span>
+                  <p>
+                    The AI interviewer will ask you{" "}
+                    <span className="text-vd-t1 font-medium">100 questions</span>{" "}
+                    across 7 categories about your voice, beliefs, and style.
+                  </p>
+                </li>
+                <li className="flex gap-4">
+                  <span className="font-mono-label text-[10px] text-vd-t3 mt-1 shrink-0">
+                    02
+                  </span>
+                  <p>
+                    It will push back on vague answers — max{" "}
+                    <span className="text-vd-t1 font-medium">2 follow-ups</span>{" "}
+                    per question, then move on.
+                  </p>
+                </li>
+                <li className="flex gap-4">
+                  <span className="font-mono-label text-[10px] text-vd-t3 mt-1 shrink-0">
+                    03
+                  </span>
+                  <p className="text-vd-t1 font-medium">
+                    Be honest. Be specific. The more precise you are, the better
+                    your voice profile will be.
+                  </p>
+                </li>
+              </ol>
+
+              <div className="border-t border-vd-border pt-4 mb-10">
+                <p className="font-mono-label text-[10px] tracking-[0.16em] text-vd-t3">
+                  Auto-saved · Close and resume any time.
+                </p>
+              </div>
+
+              <div className="flex items-center gap-6">
+                <button
+                  onClick={handleStart}
+                  className="group inline-flex items-center gap-3 bg-vd-accent text-primary-foreground px-7 py-3.5 text-[13px] font-medium hover:bg-vd-accent-text active:translate-y-px transition-all"
+                >
+                  Begin Interview
+                  <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+                </button>
+                <button
+                  onClick={() => setStep(1)}
+                  className="font-mono-label text-[10px] tracking-[0.16em] text-vd-t3 hover:text-vd-t2 transition-colors"
+                >
+                  ← Back
+                </button>
+              </div>
+            </div>
+          )}
+        </section>
+      </div>
+    </PageFrame>
   );
 };
 

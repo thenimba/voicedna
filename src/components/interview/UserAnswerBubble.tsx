@@ -4,8 +4,11 @@ interface Props {
 
 export const UserAnswerBubble = ({ answer }: Props) => {
   return (
-    <div className="ml-5 mt-2 bg-vd-surface border border-vd-border rounded-lg py-3 px-4 max-w-xl">
-      <p className="text-[13px] text-vd-t2 leading-[1.6]">{answer}</p>
+    <div className="ml-6 mt-3 max-w-xl border-l-2 border-vd-border-strong/60 pl-5 py-1">
+      <p className="font-mono-label text-[9px] tracking-[0.18em] text-vd-t3 mb-1.5">
+        YOUR ANSWER
+      </p>
+      <p className="text-[14px] text-vd-t2 leading-[1.65]">{answer}</p>
     </div>
   );
 };
