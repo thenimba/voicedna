@@ -82,8 +82,15 @@ const AuthPage = () => {
   };
 
   useEffect(() => {
-    const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
-      if (session && !busy) {
+    const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
+      // Only react to real sign-in / claim events, not the initial anonymous session
+      // or token refreshes — otherwise we bounce the user off /auth immediately.
+      if (!session) return;
+      const isClaimed = !!session.user?.email;
+      if (
+        (event === "SIGNED_IN" || event === "USER_UPDATED") &&
+        isClaimed
+      ) {
         afterAuth();
       }
     });
