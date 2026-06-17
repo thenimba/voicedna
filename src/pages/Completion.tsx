@@ -1,12 +1,14 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowRight, Download, RotateCw, Lock, Mail } from "lucide-react";
+import { ArrowRight, Download, RotateCw, Lock, Mail, Sparkles, Loader2 } from "lucide-react";
 import { getInitialState, resetInterview } from "@/lib/interview-store";
 import { Waveform } from "@/components/interview/Waveform";
 import { PageFrame } from "@/components/layout/PageFrame";
 import { isAnonymous, getProfile, type Profile } from "@/lib/auth";
 import { deleteSession } from "@/lib/interview-sync";
 import { useT } from "@/lib/i18n";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/hooks/use-toast";
 
 const Completion = () => {
   const navigate = useNavigate();
@@ -14,6 +16,8 @@ const Completion = () => {
   const state = getInitialState();
   const [anon, setAnon] = useState(false);
   const [profile, setProfile] = useState<Profile | null>(null);
+  const [analyzing, setAnalyzing] = useState(false);
+  const [analyzed, setAnalyzed] = useState<string | null>(null);
 
   useEffect(() => {
     isAnonymous().then(setAnon);
@@ -43,6 +47,40 @@ const Completion = () => {
     a.download = `${state.userName || "voicedna"}.md`;
     a.click();
     URL.revokeObjectURL(url);
+  };
+
+  const downloadMarkdown = (md: string, suffix = "") => {
+    const blob = new Blob([md], { type: "text/markdown" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${state.userName || "voicedna"}${suffix}.md`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleAnalyze = async () => {
+    if (analyzing) return;
+    if (analyzed) {
+      downloadMarkdown(analyzed, "-voice-profile");
+      return;
+    }
+    setAnalyzing(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("analyze-voice-profile", {
+        body: { userName: state.userName, qaPairs: state.qaPairs },
+      });
+      if (error) throw error;
+      const md = (data as { markdown?: string })?.markdown;
+      if (!md) throw new Error("Empty response");
+      setAnalyzed(md);
+      downloadMarkdown(md, "-voice-profile");
+    } catch (e) {
+      console.error("[analyze]", e);
+      toast({ title: t("comp.analyze.error"), variant: "destructive" });
+    } finally {
+      setAnalyzing(false);
+    }
   };
 
   const handleNewSession = async () => {
@@ -78,21 +116,59 @@ const Completion = () => {
             {t("comp.body")}
           </p>
 
-          <div className="flex flex-col sm:flex-row gap-4 sm:items-center">
-            <button
-              onClick={handleDownload}
-              className="group inline-flex items-center gap-3 bg-vd-accent text-primary-foreground px-7 py-3.5 text-[13px] font-medium hover:bg-vd-accent-text active:translate-y-px transition-all"
-            >
-              {t("comp.download")}
-              <Download className="w-4 h-4 transition-transform group-hover:translate-y-0.5" />
-            </button>
-            <button
-              onClick={handleNewSession}
-              className="inline-flex items-center gap-2 px-4 py-2 text-[12px] text-vd-t2 hover:text-vd-t1 transition-colors"
-            >
-              <RotateCw className="w-3.5 h-3.5" />
-              {t("comp.newSession")}
-            </button>
+          <div className="flex flex-col gap-4">
+            <div className="flex flex-col sm:flex-row gap-4 sm:items-center">
+              <button
+                onClick={handleAnalyze}
+                disabled={analyzing}
+                className="group inline-flex items-center gap-3 bg-vd-accent text-primary-foreground px-7 py-3.5 text-[13px] font-medium hover:bg-vd-accent-text active:translate-y-px transition-all disabled:opacity-60 disabled:cursor-wait"
+              >
+                {analyzing ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    {t("comp.analyze.loading")}
+                  </>
+                ) : analyzed ? (
+                  <>
+                    {t("comp.analyze.downloadAnalyzed")}
+                    <Download className="w-4 h-4 transition-transform group-hover:translate-y-0.5" />
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="w-4 h-4" />
+                    {t("comp.analyze")}
+                  </>
+                )}
+              </button>
+              {analyzed && !analyzing && (
+                <button
+                  onClick={() => {
+                    setAnalyzed(null);
+                    handleAnalyze();
+                  }}
+                  className="inline-flex items-center gap-2 px-3 py-2 text-[12px] text-vd-t2 hover:text-vd-t1 transition-colors"
+                >
+                  <RotateCw className="w-3.5 h-3.5" />
+                  {t("comp.analyze.regenerate")}
+                </button>
+              )}
+            </div>
+            <div className="flex flex-col sm:flex-row gap-4 sm:items-center">
+              <button
+                onClick={handleDownload}
+                className="inline-flex items-center gap-2 px-3 py-2 text-[12px] text-vd-t2 hover:text-vd-t1 transition-colors"
+              >
+                <Download className="w-3.5 h-3.5" />
+                {t("comp.analyze.downloadRaw")}
+              </button>
+              <button
+                onClick={handleNewSession}
+                className="inline-flex items-center gap-2 px-3 py-2 text-[12px] text-vd-t2 hover:text-vd-t1 transition-colors"
+              >
+                <RotateCw className="w-3.5 h-3.5" />
+                {t("comp.newSession")}
+              </button>
+            </div>
           </div>
 
           {anon ? (

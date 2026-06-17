@@ -136,6 +136,12 @@ export const he: Dictionary = {
     "comp.body":
       "הקול שלך נתפס כקובץ markdown נייד. העלה אותו לכל בינה מלאכותית כדי לשמר את הסגנון שלך.",
     "comp.download": "הורד פרופיל .md",
+    "comp.analyze": "צור פרופיל קול בבינה מלאכותית",
+    "comp.analyze.loading": "מנתח את התשובות שלך…",
+    "comp.analyze.regenerate": "צור מחדש",
+    "comp.analyze.downloadAnalyzed": "הורד פרופיל מנותח (.md)",
+    "comp.analyze.downloadRaw": "הורד תמלול גולמי",
+    "comp.analyze.error": "לא ניתן ליצור את הפרופיל. נסה שוב.",
     "comp.newSession": "התחל סשן חדש",
     "comp.claim.label": "סשן אנונימי · קשור למכשיר",
     "comp.claim.title": "שמור את הפרופיל הזה למייל שלך.",
