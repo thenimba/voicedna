@@ -16,6 +16,8 @@ const Completion = () => {
   const state = getInitialState();
   const [anon, setAnon] = useState(false);
   const [profile, setProfile] = useState<Profile | null>(null);
+  const [analyzing, setAnalyzing] = useState(false);
+  const [analyzed, setAnalyzed] = useState<string | null>(null);
 
   useEffect(() => {
     isAnonymous().then(setAnon);
