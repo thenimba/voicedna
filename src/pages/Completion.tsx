@@ -1,12 +1,14 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowRight, Download, RotateCw, Lock, Mail } from "lucide-react";
+import { ArrowRight, Download, RotateCw, Lock, Mail, Sparkles, Loader2 } from "lucide-react";
 import { getInitialState, resetInterview } from "@/lib/interview-store";
 import { Waveform } from "@/components/interview/Waveform";
 import { PageFrame } from "@/components/layout/PageFrame";
 import { isAnonymous, getProfile, type Profile } from "@/lib/auth";
 import { deleteSession } from "@/lib/interview-sync";
 import { useT } from "@/lib/i18n";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/hooks/use-toast";
 
 const Completion = () => {
   const navigate = useNavigate();
