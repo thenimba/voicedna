@@ -116,21 +116,59 @@ const Completion = () => {
             {t("comp.body")}
           </p>
 
-          <div className="flex flex-col sm:flex-row gap-4 sm:items-center">
-            <button
-              onClick={handleDownload}
-              className="group inline-flex items-center gap-3 bg-vd-accent text-primary-foreground px-7 py-3.5 text-[13px] font-medium hover:bg-vd-accent-text active:translate-y-px transition-all"
-            >
-              {t("comp.download")}
-              <Download className="w-4 h-4 transition-transform group-hover:translate-y-0.5" />
-            </button>
-            <button
-              onClick={handleNewSession}
-              className="inline-flex items-center gap-2 px-4 py-2 text-[12px] text-vd-t2 hover:text-vd-t1 transition-colors"
-            >
-              <RotateCw className="w-3.5 h-3.5" />
-              {t("comp.newSession")}
-            </button>
+          <div className="flex flex-col gap-4">
+            <div className="flex flex-col sm:flex-row gap-4 sm:items-center">
+              <button
+                onClick={handleAnalyze}
+                disabled={analyzing}
+                className="group inline-flex items-center gap-3 bg-vd-accent text-primary-foreground px-7 py-3.5 text-[13px] font-medium hover:bg-vd-accent-text active:translate-y-px transition-all disabled:opacity-60 disabled:cursor-wait"
+              >
+                {analyzing ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    {t("comp.analyze.loading")}
+                  </>
+                ) : analyzed ? (
+                  <>
+                    {t("comp.analyze.downloadAnalyzed")}
+                    <Download className="w-4 h-4 transition-transform group-hover:translate-y-0.5" />
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="w-4 h-4" />
+                    {t("comp.analyze")}
+                  </>
+                )}
+              </button>
+              {analyzed && !analyzing && (
+                <button
+                  onClick={() => {
+                    setAnalyzed(null);
+                    handleAnalyze();
+                  }}
+                  className="inline-flex items-center gap-2 px-3 py-2 text-[12px] text-vd-t2 hover:text-vd-t1 transition-colors"
+                >
+                  <RotateCw className="w-3.5 h-3.5" />
+                  {t("comp.analyze.regenerate")}
+                </button>
+              )}
+            </div>
+            <div className="flex flex-col sm:flex-row gap-4 sm:items-center">
+              <button
+                onClick={handleDownload}
+                className="inline-flex items-center gap-2 px-3 py-2 text-[12px] text-vd-t2 hover:text-vd-t1 transition-colors"
+              >
+                <Download className="w-3.5 h-3.5" />
+                {t("comp.analyze.downloadRaw")}
+              </button>
+              <button
+                onClick={handleNewSession}
+                className="inline-flex items-center gap-2 px-3 py-2 text-[12px] text-vd-t2 hover:text-vd-t1 transition-colors"
+              >
+                <RotateCw className="w-3.5 h-3.5" />
+                {t("comp.newSession")}
+              </button>
+            </div>
           </div>
 
           {anon ? (
