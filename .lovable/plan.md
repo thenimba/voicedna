@@ -1,21 +1,31 @@
-## Fix: Hebrew Noto Sans not applied to questions, sidebar, and headlines
+## Plan
 
-### Why it's still serif/italic
-My previous CSS override targeted `.font-serif`, `h1`–`h4`, and `em`/`i`. But every headline, question bubble, and sidebar label in this app uses a custom class `font-serif-question` plus Tailwind's `italic` utility — neither of which my selector caught. The QuestionBubble, InterviewSidebar items, Onboarding/Landing/Completion/Auth headlines, and ExampleHint body all fall through to Lora italic.
+### 1. Enable Google Sign-In (Lovable Cloud managed)
 
-### Change (single file: `src/index.css`)
-Extend the `html[lang="he"]` block to also override:
+- Turn on the Google provider via `supabase--configure_social_auth` with `providers: ["google"]` (keep email enabled — both methods are already used in `Auth.tsx`).
+- Code already supports it: `src/lib/auth.ts → signInWithGoogle()` uses `lovable.auth.signInWithOAuth("google", …)`, and the Auth page exposes a "Continue with Google" button. No UI changes needed.
+- Verify end-to-end: trigger sign-in from `/auth`, confirm `onAuthStateChange` redirects via `afterAuth()`, and that an anonymous session is upgraded cleanly (the existing `pullSession()` call will pull any synced interview state).
 
-- `.font-serif-question` → `'Noto Sans Hebrew', system-ui, sans-serif`, weight 500, normal style
-- Tailwind's `.italic` utility when nested under `html[lang="he"]` → `font-style: normal` (italic looks bad in Hebrew and Noto Sans Hebrew has no italic cut); compensate with `font-weight: 600` so the "emphasized word" still reads as emphasis
-- Keep the amber follow-up question visually distinct via color only (already handled by `text-vd-amber`), no italic needed
+### 2. Migrate anonymous user `1b328154-…-1d96a1b145a4` → `nimrodbh@gmail.com`
 
-No component, Tailwind config, or i18n changes required — pure CSS, scoped to `html[lang="he"]`, so English is untouched.
+The owner of that email must first sign in once (Google or email) so an `auth.users` row exists. Then run a one-shot data migration that re-points the orphan rows to the admin's real user id and removes the now-empty anonymous identity.
 
-### Verification
-After the edit, reload `/interview` in Hebrew and confirm:
-1. Sidebar category names render in Noto Sans Hebrew (not serif)
-2. Question bubble text is upright Noto Sans Hebrew, no italic slant
-3. Follow-up (amber) questions are upright, still amber-colored
-4. Onboarding / Landing / Completion / Auth headlines use Noto Sans Hebrew
-5. English (toggle back) is unchanged — still Lora italic where designed
+Steps (executed as a single migration after confirming the admin's user id):
+
+1. Look up admin id: `SELECT id FROM auth.users WHERE email = 'nimrodbh@gmail.com'` → call it `:admin_id`.
+2. Re-assign data:
+   - `UPDATE public.interview_sessions SET user_id = :admin_id WHERE user_id = '1b328154-af6f-4972-8108-1d96a1b145a4'`
+   - For `profiles` (PK = user id) merge by copying any non-null fields from the anonymous profile into the admin's profile (preserve admin's `session_code`), then `DELETE` the anonymous profile row.
+3. Remove the orphan auth identity: `DELETE FROM auth.users WHERE id = '1b328154-af6f-4972-8108-1d96a1b145a4'` (cascades clean up any leftovers).
+
+If `nimrodbh@gmail.com` has **not** signed in yet, I'll pause after step 1 and ask them to sign in once before running the merge — otherwise there is no target id to attach the data to.
+
+### Technical notes
+
+- `signInAnonymously` stays enabled (core to the app, documented in security memory).
+- No schema changes; migration is data-only but uses the migration tool because it touches `auth.users`.
+- No client code changes required for either item.
+
+### Question before I execute
+
+Has `nimrodbh@gmail.com` already signed into the app at least once? If not, they need to sign in (any method) so I have a target user id to merge the anonymous session into.
