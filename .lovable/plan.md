@@ -1,31 +1,40 @@
-## Plan
+# AI Voice Profile Analysis
 
-### 1. Enable Google Sign-In (Lovable Cloud managed)
+Today the Completion screen only dumps raw Q&A into a markdown file (in whatever language the user answered). The user wants the AI to actually **analyze** those answers against the Taste Interviewer framework and produce a polished, English voice-profile document plus a ready-to-paste system prompt.
 
-- Turn on the Google provider via `supabase--configure_social_auth` with `providers: ["google"]` (keep email enabled — both methods are already used in `Auth.tsx`).
-- Code already supports it: `src/lib/auth.ts → signInWithGoogle()` uses `lovable.auth.signInWithOAuth("google", …)`, and the Auth page exposes a "Continue with Google" button. No UI changes needed.
-- Verify end-to-end: trigger sign-in from `/auth`, confirm `onAuthStateChange` redirects via `afterAuth()`, and that an anonymous session is upgraded cleanly (the existing `pullSession()` call will pull any synced interview state).
+## What gets built
 
-### 2. Migrate anonymous user `1b328154-…-1d96a1b145a4` → `nimrodbh@gmail.com`
+### 1. New edge function — `supabase/functions/analyze-voice-profile/index.ts`
+- Input: `{ userName, qaPairs: [{ category, question, answer, isFollowUp }] }`
+- Calls Lovable AI Gateway (`google/gemini-2.5-pro` for quality) via the AI SDK pattern already used by `generate-example`.
+- System prompt instructs the model to:
+  - Read all Q&A (answers may be mixed Hebrew/English) and **write the entire output in English**.
+  - Follow the structure from `docs/taste-interviewer-prompt.md`:
+    - `# VOICE PROFILE: <name>` + 2–3-sentence **Core Identity**
+    - 7 thematic sections (Beliefs, Writing Mechanics, Aesthetic Crimes, Voice & Personality, Structural Preferences, Hard Nos, Red Flags) — synthesized analysis, not a raw Q&A dump
+    - **Quick Reference Card** (Always / Never / Signature Phrases / Voice Calibration)
+    - **Anti-Overfitting Guide** with the filled-in "What Matters Most" 3 items
+  - Append a new final section **`## RECOMMENDED SYSTEM PROMPT`** containing a fenced code block — a drop-in system prompt embodying the user's voice DNA, ready to paste into Claude/ChatGPT/Gemini.
+  - Translate any Hebrew quotes used as examples and keep the original in parentheses when useful.
+- Returns `{ markdown: string }`. CORS + Zod input validation + 429/402 handling.
 
-The owner of that email must first sign in once (Google or email) so an `auth.users` row exists. Then run a one-shot data migration that re-points the orphan rows to the admin's real user id and removes the now-empty anonymous identity.
+### 2. Update `src/pages/Completion.tsx`
+- Add a primary action **"Generate AI Voice Profile"** (alongside the existing raw download, which becomes secondary "Download raw transcript").
+- On click: call the edge function with `state.userName` + `state.qaPairs`, show a loading state in the existing button, then trigger a browser download of `<name>-voice-profile.md`.
+- Cache the generated markdown in component state so repeated downloads don't re-bill; add a small "Regenerate" link.
+- Surface gateway errors (rate limit / credits) via toast.
+- i18n strings added to `src/lib/i18n/en.ts` and `he.ts` (button label, loading, error, success).
 
-Steps (executed as a single migration after confirming the admin's user id):
+### 3. No schema / auth / RLS changes
+The edge function is stateless — it reads input from the request body only.
 
-1. Look up admin id: `SELECT id FROM auth.users WHERE email = 'nimrodbh@gmail.com'` → call it `:admin_id`.
-2. Re-assign data:
-   - `UPDATE public.interview_sessions SET user_id = :admin_id WHERE user_id = '1b328154-af6f-4972-8108-1d96a1b145a4'`
-   - For `profiles` (PK = user id) merge by copying any non-null fields from the anonymous profile into the admin's profile (preserve admin's `session_code`), then `DELETE` the anonymous profile row.
-3. Remove the orphan auth identity: `DELETE FROM auth.users WHERE id = '1b328154-af6f-4972-8108-1d96a1b145a4'` (cascades clean up any leftovers).
+## Technical notes
+- Reuse the gateway helper pattern from `supabase/functions/generate-example/index.ts` (`createLovableAiGatewayProvider`, `streamText`/`generateText`).
+- Use `generateText` (non-streaming) — output is one document; simpler UX with a single loading state.
+- `stopWhen` not needed (no tools).
+- Token budget: 126 Q&A pairs ≈ ~15–25k input tokens; Gemini 2.5 Pro handles this comfortably. Output capped via prompt ("aim for 1500–2500 words").
+- Keep `LOVABLE_API_KEY` server-side (already configured).
 
-If `nimrodbh@gmail.com` has **not** signed in yet, I'll pause after step 1 and ask them to sign in once before running the merge — otherwise there is no target id to attach the data to.
-
-### Technical notes
-
-- `signInAnonymously` stays enabled (core to the app, documented in security memory).
-- No schema changes; migration is data-only but uses the migration tool because it touches `auth.users`.
-- No client code changes required for either item.
-
-### Question before I execute
-
-Has `nimrodbh@gmail.com` already signed into the app at least once? If not, they need to sign in (any method) so I have a target user id to merge the anonymous session into.
+## Out of scope
+- Storing the generated profile in the database (can be added later if the user wants history).
+- Auto-running analysis on completion — kept user-triggered to control cost.
