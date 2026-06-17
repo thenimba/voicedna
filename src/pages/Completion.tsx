@@ -49,6 +49,40 @@ const Completion = () => {
     URL.revokeObjectURL(url);
   };
 
+  const downloadMarkdown = (md: string, suffix = "") => {
+    const blob = new Blob([md], { type: "text/markdown" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${state.userName || "voicedna"}${suffix}.md`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleAnalyze = async () => {
+    if (analyzing) return;
+    if (analyzed) {
+      downloadMarkdown(analyzed, "-voice-profile");
+      return;
+    }
+    setAnalyzing(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("analyze-voice-profile", {
+        body: { userName: state.userName, qaPairs: state.qaPairs },
+      });
+      if (error) throw error;
+      const md = (data as { markdown?: string })?.markdown;
+      if (!md) throw new Error("Empty response");
+      setAnalyzed(md);
+      downloadMarkdown(md, "-voice-profile");
+    } catch (e) {
+      console.error("[analyze]", e);
+      toast({ title: t("comp.analyze.error"), variant: "destructive" });
+    } finally {
+      setAnalyzing(false);
+    }
+  };
+
   const handleNewSession = async () => {
     await deleteSession();
     resetInterview();
