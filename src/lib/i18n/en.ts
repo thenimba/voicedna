@@ -136,6 +136,12 @@ export const en: Dictionary = {
     "comp.body":
       "your voice has been captured as a portable markdown file. Upload it to any AI to preserve your style.",
     "comp.download": "Download .md Profile",
+    "comp.analyze": "Generate AI Voice Profile",
+    "comp.analyze.loading": "Analyzing your answers…",
+    "comp.analyze.regenerate": "Regenerate",
+    "comp.analyze.downloadAnalyzed": "Download analyzed profile (.md)",
+    "comp.analyze.downloadRaw": "Download raw transcript",
+    "comp.analyze.error": "Could not generate profile. Try again.",
     "comp.newSession": "Start new session",
     "comp.claim.label": "Anonymous session · device-bound",
     "comp.claim.title": "Save this profile to your email.",
