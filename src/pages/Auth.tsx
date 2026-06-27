@@ -64,22 +64,6 @@ const AuthPage = () => {
     }
   };
 
-  const handleGoogle = async () => {
-    setBusy(true);
-    try {
-      const result = await signInWithGoogle();
-      if ((result as any)?.error) {
-        toast.error((result as any).error.message ?? t("auth.toast.google.failed"));
-        return;
-      }
-      if ((result as any)?.redirected) return;
-      await afterAuth();
-    } catch (err: any) {
-      toast.error(err?.message ?? t("auth.toast.google.failed"));
-    } finally {
-      setBusy(false);
-    }
-  };
 
   useEffect(() => {
     const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
