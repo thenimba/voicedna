@@ -5,7 +5,7 @@ import { PageFrame } from "@/components/layout/PageFrame";
 import {
   signInWithEmail,
   signUpWithEmail,
-  signInWithGoogle,
+  
   claimWithEmail,
   isAnonymous,
 } from "@/lib/auth";
