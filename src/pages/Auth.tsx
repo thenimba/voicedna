@@ -199,14 +199,7 @@ const AuthPage = () => {
           </form>
 
           <div className="mt-8 pt-6 border-t border-vd-border max-w-md">
-            <button
-              onClick={handleGoogle}
-              disabled={busy}
-              className="w-full px-5 py-3 border border-vd-border-strong bg-vd-surface text-[13px] text-vd-t1 hover:bg-vd-cream transition-colors disabled:opacity-40"
-            >
-              {t("auth.google")}
-            </button>
-            <p className="font-mono-label text-[10px] tracking-[0.14em] text-vd-t3 mt-4">
+            <p className="font-mono-label text-[10px] tracking-[0.14em] text-vd-t3">
               <Link to="/" className="hover:text-vd-t1">{t("auth.back")}</Link>
             </p>
           </div>
